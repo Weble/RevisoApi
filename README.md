@@ -12,7 +12,6 @@ composer require webleit/revisoapi
 ## Usage
 
 In order to use the library, just require the composer autoload file, and then fire up the library itself.
-In order for the library to work, you need to provide an auth token for the zoho book apis.
 
 ```php
 require './vendor/autoload.php';

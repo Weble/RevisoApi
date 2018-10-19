@@ -3,7 +3,7 @@
     "description": "Reviso Api - PHP SDK",
     "license": "MIT",
     "keywords": ["reviso", "api"],
-    "version": "1.0.0",
+    "version": "1.0.1",
     "authors": [
         {
             "name": "Daniele Rosario",
@@ -14,9 +14,7 @@
         "php" : ">=7.0.0",
         "guzzlehttp/guzzle": "~6.0",
         "tightenco/collect": "^5.3",
-        "phpunit/phpunit": "^7.4",
-        "league/json-guard": "^1.0",
-        "league/json-reference": "^1.1"
+        "phpunit/phpunit": "^7.4"
     },
     "autoload": {
         "psr-4": {
