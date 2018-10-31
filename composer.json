@@ -3,7 +3,7 @@
     "description": "Reviso Api - PHP SDK",
     "license": "MIT",
     "keywords": ["reviso", "api"],
-    "version": "1.0.1",
+    "version": "1.0.3",
     "authors": [
         {
             "name": "Daniele Rosario",
