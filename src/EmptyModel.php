@@ -23,7 +23,7 @@ class EmptyModel extends Model
     {
         $this->uri = $uri;
         $this->keyName = $keyName;
-        $this->data = new \stdClass();
+        $this->data = collect();
         $this->client = Client::getInstance();
     }
 
@@ -61,11 +61,9 @@ class EmptyModel extends Model
      */
     public function save($data = [])
     {
-        foreach ($data as $key => $value) {
-            $this->data->$key = $value;
-        }
+        $this->data = $this->data->merge($data);
 
-        $data = $this->client->post($this->getUrl(), (array) $this->data);
+        $data = $this->client->post($this->getUrl(), $this->data->toArray());
 
         return new Model($data, $this->getKeyName());
     }

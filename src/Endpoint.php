@@ -85,7 +85,10 @@ class Endpoint
             return new Model($data, $this->getResourceKey());
         }
 
-        $data = $this->fetchFromRoute($this->getFindRoute(), [$item]);
+        $params = $this->getRouteParameters($this->getFindRoute());
+        $key = $params->first();
+
+        $data = $this->fetchFromRoute($this->getFindRoute(), [$key => $item]);
         return new Model($data, $this->getResourceKey());
     }
 
@@ -108,7 +111,7 @@ class Endpoint
         $queryParams = array_diff($parameters, $params->toArray());
         $path = $uri->getPath();
         foreach ($params as $key => $value) {
-            $path = str_ireplace($path, '{' . $key . '}', $value);
+            $path = str_ireplace(urlencode('{') . $key . urlencode('}'), $value, $path);
         }
 
         $uri = $uri->withPath($path);

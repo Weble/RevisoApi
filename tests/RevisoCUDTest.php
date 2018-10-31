@@ -85,7 +85,8 @@ class RevisoCUDTest extends TestCase
                 'city' => 'test',
                 'country' => 'IT',
             ]
-        ]];
+            ]
+        ];
 
         return $data;
     }
