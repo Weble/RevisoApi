@@ -4,6 +4,7 @@ namespace Webleit\RevisoApi;
 use function GuzzleHttp\Psr7\parse_query;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
+use Webleit\RevisoApi\Endpoint\Endpoint;
 
 /**
  * Class Reviso
@@ -60,7 +61,7 @@ use Psr\Http\Message\UriInterface;
  * @property-read Endpoint $studio
  * @property-read Endpoint $tenderContracts
  * @property-read Endpoint $vatStatements
- * @property-read Endpoint $voucherTemplates
+ * @property-read Endpoin $voucherTemplates
  */
 class Reviso
 {
@@ -125,6 +126,7 @@ class Reviso
     {
         $name = self::snakeString($name);
         $endpoints = $this->getEndpoints();
+
         if (!isset($endpoints[$name])) {
             return $this->$name;
         }
@@ -175,6 +177,13 @@ class Reviso
         if (!isset($endpoints[$name])) {
             return $this->$name;
         }
+
+        // Dedicated class?
+        $class = '\\Webleit\\RevisoApi\\Endpoint\\' . ucfirst(strtolower($name)) . 'Endpoint';
+        if (class_exists($class)) {
+            return new $class($this->client, new Uri($endpoints[$name]));
+        }
+
 
         return new Endpoint($this->client, new Uri($endpoints[$name]));
     }

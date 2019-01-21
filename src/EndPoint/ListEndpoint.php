@@ -1,9 +1,12 @@
 <?php
 
-namespace Webleit\RevisoApi;
+namespace Webleit\RevisoApi\Endpoint;
 
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
+use Webleit\RevisoApi\Client;
+use Webleit\RevisoApi\Exceptions\ErrorResponseException;
+use Webleit\RevisoApi\Collection;
 
 /**
  * Class Reviso
@@ -57,7 +60,7 @@ class ListEndpoint
 
     /**
      * @return Collection
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function get ()
     {
