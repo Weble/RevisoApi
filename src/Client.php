@@ -5,7 +5,6 @@ namespace Webleit\RevisoApi;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 use Webleit\RevisoApi\Exceptions\DetailedErrorResponseException;
 use Webleit\RevisoApi\Exceptions\ErrorResponseException;

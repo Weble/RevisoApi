@@ -4,7 +4,6 @@ namespace Webleit\ZohoBooksApi\Test;
 
 use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
-use Webleit\RevisoApi\ListEndpoint;
 use Webleit\RevisoApi\Model;
 use Webleit\RevisoApi\Endpoint;
 use Webleit\RevisoApi\Reviso;
@@ -174,10 +173,19 @@ class RevisoBaseTest extends TestCase
     /**
      * @test
      */
+    public function can_list_projects()
+    {
+        /** @var Endpoint $resource */
+        $resource = self::$reviso->project;
+
+        $this->assertGreaterThan(0, $resource->get()->count());
+    }
+
+    /**
+     * @test
+     */
     public function can_find_account()
     {
-
-
         /** @var Endpoint $resource */
         $resource = self::$reviso->accounts;
         $item = $resource->get()->first();
@@ -193,12 +201,11 @@ class RevisoBaseTest extends TestCase
     public function can_find_accounting_years_from_account()
     {
 
-
         /** @var Endpoint $resource */
         $resource = self::$reviso->accounts;
         $item = $resource->get()->first();
 
-        $this->assertInstanceOf(ListEndpoint::class, $item->accountingYears);
+        $this->assertInstanceOf(Endpoint\ListEndpoint::class, $item->accountingYears);
         $this->assertGreaterThan(0, $item->accountingYears->get()->count());
     }
 

@@ -2,6 +2,7 @@
 namespace Webleit\RevisoApi;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
+use Webleit\RevisoApi\Endpoint\ListEndpoint;
 
 /**
  * Class Model

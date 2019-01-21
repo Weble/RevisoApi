@@ -1,9 +1,14 @@
 <?php
 
-namespace Webleit\RevisoApi;
+namespace Webleit\RevisoApi\Endpoint;
 
+use Webleit\RevisoApi\Client;
+use Webleit\RevisoApi\Collection;
+use Webleit\RevisoApi\EmptyModel;
+use Webleit\RevisoApi\Exceptions\ErrorResponseException;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
+use Webleit\RevisoApi\Model;
 
 /**
  * Class Reviso
@@ -50,7 +55,7 @@ class Endpoint
 
     /**
      * @return Collection
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function get ()
     {
@@ -65,7 +70,7 @@ class Endpoint
     /**
      * @param array $data
      * @return Model
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function create($data = [])
     {
@@ -76,7 +81,7 @@ class Endpoint
     /**
      * @param $item
      * @return Model
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function find ($item)
     {
@@ -96,7 +101,7 @@ class Endpoint
      * @param UriInterface $uri
      * @param array $parameters
      * @return \stdClass|string
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function fetchFromRoute(UriInterface $uri, $parameters = [])
     {
@@ -141,7 +146,7 @@ class Endpoint
 
     /**
      * @return Uri
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getListRoute ()
     {
@@ -150,7 +155,7 @@ class Endpoint
 
     /**
      * @return UriInterface
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getFindRoute ()
     {
@@ -159,7 +164,7 @@ class Endpoint
 
     /**
      * @return UriInterface
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getCreateRoute ()
     {
@@ -168,7 +173,7 @@ class Endpoint
 
     /**
      * @return UriInterface
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getDeleteRoute ()
     {
@@ -177,7 +182,7 @@ class Endpoint
 
     /**
      * @return mixed
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getResourceKey()
     {
@@ -186,7 +191,7 @@ class Endpoint
 
     /**
      * @return string
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getName ()
     {
@@ -195,7 +200,7 @@ class Endpoint
 
     /**
      * @return object
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getPostSchema ()
     {
@@ -204,7 +209,7 @@ class Endpoint
 
     /**
      * @return object
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getPutSchema ()
     {
@@ -214,7 +219,7 @@ class Endpoint
     /**
      * @param string $type
      * @return \stdClass|string
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getSchema ($type = 'post')
     {
@@ -230,7 +235,7 @@ class Endpoint
 
     /**
      * @return \stdClass
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getInfo ()
     {
@@ -243,7 +248,7 @@ class Endpoint
 
     /**
      * @return \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getRouteList ()
     {
@@ -254,7 +259,7 @@ class Endpoint
     }
 
     /**
-     * @throws Exceptions\ErrorResponseException
+     * @throws ErrorResponseException
      */
     public function getRoutes ()
     {
