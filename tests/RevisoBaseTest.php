@@ -173,17 +173,6 @@ class RevisoBaseTest extends TestCase
     /**
      * @test
      */
-    public function can_list_projects()
-    {
-        /** @var Endpoint $resource */
-        $resource = self::$reviso->project;
-
-        $this->assertGreaterThan(0, $resource->get()->count());
-    }
-
-    /**
-     * @test
-     */
     public function can_find_account()
     {
         /** @var Endpoint $resource */
@@ -207,6 +196,20 @@ class RevisoBaseTest extends TestCase
 
         $this->assertInstanceOf(Endpoint\ListEndpoint::class, $item->accountingYears);
         $this->assertGreaterThan(0, $item->accountingYears->get()->count());
+    }
+
+    /**
+     * @test
+     */
+    public function can_list_customers()
+    {
+        /** @var Endpoint\Endpoint $resource */
+        $resources = self::$reviso->customers;
+        $list = $resources->get();
+        $resource = $list->first();
+
+        $this->assertGreaterThan(0, $list->count());
+
     }
 
     public static function tearDownAfterClass()
