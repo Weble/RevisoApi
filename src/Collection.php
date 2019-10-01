@@ -43,9 +43,12 @@ class Collection
     public function getData()
     {
         if (!$this->data) {
+
             $this->data = collect($this->info->collection)->map(function($item) {
                 return new Model($item, $this->keyName);
-            })->keyBy($this->keyName);
+            })->keyBy(function(Model $item) {
+                return $item->{$this->keyName};
+            });
         }
 
         return $this->data;
