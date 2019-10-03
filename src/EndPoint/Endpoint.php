@@ -159,7 +159,8 @@ class Endpoint
      */
     public function getFindRoute ()
     {
-        return new Uri($this->getRouteList()->get(1)->path);
+        // Fix for No Resource key where 2nd element is POST Request
+        return new Uri($this->getRouteList()->where('method','GET')->values()->get(1)->path);
     }
 
     /**
@@ -186,7 +187,26 @@ class Endpoint
      */
     public function getResourceKey()
     {
-        return $this->getRouteParameters($this->getFindRoute())->first();
+        $resourceKey = $this->getRouteParameters($this->getFindRoute())->first();
+        
+        // Check if resourceKey is valid
+        try {
+            $scheme = $this->getSchema();
+            $is_recheck = false;
+            checkvalid:
+            if(!isset($this->getSchema()->properties->{$resourceKey})) {
+                if($is_recheck) {
+                    $resourceKey = '';
+                } else {
+                    $resourceKey = str_replace('Id', 'Number', $resourceKey);
+                    $is_recheck = true;
+                    goto checkvalid;
+                }
+            }
+        } catch (ErrorResponseException $e) {
+            // Scheme not preset, skipping this check
+        }
+        return $resourceKey;
     }
 
     /**
