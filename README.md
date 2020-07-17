@@ -48,7 +48,7 @@ $groups = $reviso->customerGroups->get();
 
 ### List calls
 
-To get a list of resources from a module, use the getList() method
+To get a list of resources from a module, use the get() method
 
 ```php
 $customers = $reviso->customers->get();
@@ -60,6 +60,21 @@ In order to navigate the pages, just use the "page" and "perPage" methods
 $customers = $reviso->customers->page(1)->perPage(100)->get();
 ```
 
+
+
+### Filters
+
+To filter a list of resources from a module, use the `where()` method before calling `get()`
+
+```php
+$customers = $reviso->customers->where('corporateIdentificationNumber`, '=', '123456789')->get();
+```
+
+In order to navigate the pages, just use the "page" and "perPage" methods
+
+```php
+$customers = $reviso->customers->page(1)->perPage(100)->get();
+```
 
 ## Return Types
 
