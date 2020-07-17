@@ -41,6 +41,10 @@ class Endpoint
      * @var int
      */
     protected $page = 0;
+    /**
+     * @var ListEndpoint
+     */
+    protected $listEndpoint;
 
     /**
      * Endpoint constructor.
@@ -51,20 +55,32 @@ class Endpoint
     {
         $this->client = $client;
         $this->uri = $uri;
+
+        $this->listEndpoint = new ListEndpoint($this->client, $this->getListRoute(), $this->getResourceKey());
     }
 
     /**
      * @return Collection
      * @throws ErrorResponseException
      */
-    public function get ()
+    public function get (): Collection
     {
-        $listEndpoint = new ListEndpoint($this->client, $this->getListRoute(), $this->getResourceKey());
-
-        return $listEndpoint
+        return $this->listEndpoint
             ->perPage($this->perPage)
             ->page($this->page)
             ->get();
+    }
+
+    /**
+     * @param string $filterName
+     * @param string $operator
+     * @param $value
+     * @return $this
+     */
+    public function where(string $filterName, string $operator, $value): self
+    {
+        $this->listEndpoint->where($filterName, $operator, $value);
+        return $this;
     }
 
     /**

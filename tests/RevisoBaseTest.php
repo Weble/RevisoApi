@@ -16,7 +16,7 @@ class RevisoBaseTest extends TestCase
 {
     protected static $reviso;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         self::$reviso = new Reviso();
     }
@@ -189,8 +189,7 @@ class RevisoBaseTest extends TestCase
      */
     public function can_find_accounting_years_from_account()
     {
-
-        /** @var Endpoint $resource */
+        /** @var Endpoint\Endpoint $resource */
         $resource = self::$reviso->accounts;
         $item = $resource->get()->first();
 
@@ -201,18 +200,37 @@ class RevisoBaseTest extends TestCase
     /**
      * @test
      */
-    public function can_list_customers()
+    public function can_filter_customers()
     {
         /** @var Endpoint\Endpoint $resource */
         $resources = self::$reviso->customers;
         $list = $resources->get();
         $resource = $list->first();
+        $lastResource = $list->last();
+
+        $corporateIdentificationNumber = $resource->corporateIdentificationNumber;
+        $list = collect($resources->where('corporateIdentificationNumber', '=', $corporateIdentificationNumber)->get()->toArray());
+
+        $this->assertGreaterThan(0, $list->count());
+        $resource = $list->first();
+        $this->assertEquals($corporateIdentificationNumber, $resource['corporateIdentificationNumber']);
+        $this->assertEquals(0, $list->where('corporateIdentificationNumber', '!=', $corporateIdentificationNumber)->count());
+    }
+
+    /**
+     * @test
+     */
+    public function can_list_customers()
+    {
+        /** @var Endpoint\Endpoint $resource */
+        $resources = self::$reviso->customers;
+        $list = $resources->get();
 
         $this->assertGreaterThan(0, $list->count());
 
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         self::$reviso = null;
     }

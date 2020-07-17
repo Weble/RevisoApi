@@ -5,8 +5,8 @@ namespace Webleit\RevisoApi\Endpoint;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
 use Webleit\RevisoApi\Client;
-use Webleit\RevisoApi\Exceptions\ErrorResponseException;
 use Webleit\RevisoApi\Collection;
+use Webleit\RevisoApi\Exceptions\ErrorResponseException;
 
 /**
  * Class Reviso
@@ -29,7 +29,6 @@ class ListEndpoint
      */
     protected $info;
 
-
     /**
      * @var int
      */
@@ -46,12 +45,17 @@ class ListEndpoint
     protected $resourceKey;
 
     /**
+     * @var array
+     */
+    protected $filters = [];
+
+    /**
      * ListEndpoint constructor.
      * @param Client $client
      * @param UriInterface $uri
      * @param $resourceKey
      */
-    public function __construct (Client $client, UriInterface $uri, $resourceKey)
+    public function __construct(Client $client, UriInterface $uri, $resourceKey)
     {
         $this->client = $client;
         $this->uri = $uri;
@@ -59,13 +63,19 @@ class ListEndpoint
     }
 
     /**
+     * @param array $filters
      * @return Collection
      * @throws ErrorResponseException
      */
-    public function get ()
+    public function get(): Collection
     {
         $uri = Uri::withQueryValue($this->uri, 'skippages', $this->page);
         $uri = Uri::withQueryValue($uri, 'pagesize', $this->perPage);
+
+        $filtersQuery = $this->buildFilters();
+        if ($filtersQuery) {
+            $uri = Uri::withQueryValue($uri, 'filter', $this->buildFilters());
+        }
 
         $list = $this->client->get($uri);
 
@@ -73,10 +83,27 @@ class ListEndpoint
     }
 
     /**
+     * @param string $filterName
+     * @param string $operator
+     * @param $value
+     * @return $this
+     */
+    public function where(string $filterName, string $operator, $value): self
+    {
+        $this->filters[] = [
+            'name'     => $filterName,
+            'operator' => $operator,
+            'value'    => $value
+        ];
+
+        return $this;
+    }
+
+    /**
      * @param $number
      * @return $this
      */
-    public function perPage ($number)
+    public function perPage($number)
     {
         $this->perPage = $number;
         return $this;
@@ -86,7 +113,7 @@ class ListEndpoint
      * @param $number
      * @return $this
      */
-    public function page ($number)
+    public function page($number)
     {
         $this->page = $number;
         return $this;
@@ -98,5 +125,40 @@ class ListEndpoint
     public function getResourceKey()
     {
         return $this->resourceKey;
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function buildFilters(): ?string
+    {
+        if (!count($this->filters)) {
+            return null;
+        }
+
+        $operatorsMap = [
+            "="     => '$eq',
+            "!="    => '$ne',
+            ">"     => '$gt',
+            ">="    => '$gte',
+            "<"     => '$lt',
+            "<="    => '$lte',
+            "like"  => '$like',
+            "&&"    => '$and',
+            "||"    => '$or',
+            "in"    => '$in',
+            "notIn" => '$nin',
+        ];
+
+        $query = '';
+        foreach ($this->filters as $filter) {
+            if (isset($operatorsMap[$filter['operator']])) {
+                $filter['operator'] = $operatorsMap[$filter['operator']];
+            }
+
+            $query .= $filter['name'] . $filter['operator'] . ':' . $filter['value'];
+        }
+
+        return $query;
     }
 }

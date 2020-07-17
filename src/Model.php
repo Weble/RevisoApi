@@ -1,14 +1,17 @@
 <?php
+
 namespace Webleit\RevisoApi;
+
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
+use Tightenco\Collect\Contracts\Support\Arrayable;
 use Webleit\RevisoApi\Endpoint\ListEndpoint;
 
 /**
  * Class Model
  * @package Webleit\RevisoApi
  */
-class Model implements \JsonSerializable, \Tightenco\Collect\Contracts\Support\Arrayable
+class Model implements \JsonSerializable, Arrayable
 {
     /**
      * @var object
@@ -30,7 +33,7 @@ class Model implements \JsonSerializable, \Tightenco\Collect\Contracts\Support\A
      * @param $data
      * @param $keyName
      */
-    public function __construct ($data = null, $keyName)
+    public function __construct($data = null, $keyName)
     {
         $this->data = $data;
         $this->keyName = $keyName;
@@ -49,7 +52,7 @@ class Model implements \JsonSerializable, \Tightenco\Collect\Contracts\Support\A
     /**
      * @return string
      */
-    public function getKeyName ()
+    public function getKeyName()
     {
         return $this->keyName;
     }
@@ -58,10 +61,10 @@ class Model implements \JsonSerializable, \Tightenco\Collect\Contracts\Support\A
      * @param $name
      * @return ListEndpoint
      */
-    function __get($name)
+    public function __get($name)
     {
         if (!isset($this->data->$name)) {
-            return $this->$name;
+            return;
         }
 
         // Is url => let's fetch that resource
@@ -76,7 +79,7 @@ class Model implements \JsonSerializable, \Tightenco\Collect\Contracts\Support\A
      * @param $name
      * @param $value
      */
-    function __set($name, $value)
+    public function __set($name, $value)
     {
         $this->data->$name = $value;
     }
@@ -144,7 +147,7 @@ class Model implements \JsonSerializable, \Tightenco\Collect\Contracts\Support\A
             $this->data->$key = $value;
         }
 
-        $data = $this->client->put($this->getUrl(), (array) $this->data);
+        $data = $this->client->put($this->getUrl(), (array)$this->data);
 
         $updated = new Model($data, $this->getKeyName());
         $this->data = $updated->getData();

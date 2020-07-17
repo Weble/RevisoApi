@@ -8,13 +8,14 @@ use Psr\Http\Message\UriInterface;
 /**
  * Class Reviso
  * @package Webleit\RevisoApi
+ * @mixin \Tightenco\Collect\Support\Collection
  */
 class Collection
 {
     /**
      * @var Collection
      */
-    protected $data = [];
+    protected $data;
 
     /**
      * @var string
@@ -43,7 +44,6 @@ class Collection
     public function getData()
     {
         if (!$this->data) {
-
             $this->data = collect($this->info->collection)->map(function($item) {
                 return new Model($item, $this->keyName);
             })->keyBy(function(Model $item) {

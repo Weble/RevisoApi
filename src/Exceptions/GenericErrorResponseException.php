@@ -11,7 +11,7 @@ class GenericErrorResponseException extends ErrorResponseException
     {
         $message = sprintf(
             "Error Code: %s. Message: %s. Hint: %s. ",
-            $error->httpStatusCode, $error->message,  $error->developerHint
+            $error->httpStatusCode, $error->message,  $error->developerHint ?? json_encode($error)
         );
 
         parent::__construct($message);

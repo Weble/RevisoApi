@@ -17,7 +17,7 @@ class RevisoCUDTest extends TestCase
 {
     public static $reviso;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         $authFile = __DIR__ . '/config.example.json';
         if (file_exists(__DIR__ . '/config.json')) {
@@ -123,7 +123,7 @@ class RevisoCUDTest extends TestCase
         $this->assertEquals(true, $result);
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         self::$reviso = null;
     }
