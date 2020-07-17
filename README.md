@@ -67,7 +67,7 @@ $customers = $reviso->customers->page(1)->perPage(100)->get();
 To filter a list of resources from a module, use the `where()` method before calling `get()`
 
 ```php
-$customers = $reviso->customers->where('corporateIdentificationNumber`, '=', '123456789')->get();
+$customers = $reviso->customers->where('corporateIdentificationNumber', '=', '123456789')->get();
 ```
 
 In order to navigate the pages, just use the "page" and "perPage" methods
