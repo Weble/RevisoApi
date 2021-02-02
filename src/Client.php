@@ -185,6 +185,24 @@ class Client
             ])
         );
     }
+    
+    /**
+     * @param $url
+     * @param array $params
+     * @return \stdClass|string
+     * @throws ErrorResponseException
+     */
+    public function postFile($url, array $params = [])
+    {
+                
+        $url = $this->getRequestUrl($url);
+
+        return $this->processResult(
+            $this->httpClient->post($url, [
+                RequestOptions::MULTIPART => $params
+            ])
+        );
+    }
 
     /**
      * @param $url
