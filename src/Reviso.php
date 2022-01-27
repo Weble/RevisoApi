@@ -1,10 +1,11 @@
 <?php
 
 namespace Webleit\RevisoApi;
-use function GuzzleHttp\Psr7\parse_query;
+
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
 use Webleit\RevisoApi\Endpoint\Endpoint;
+use function GuzzleHttp\Psr7\parse_query;
 
 /**
  * Class Reviso
@@ -85,7 +86,7 @@ class Reviso
      * @param string $appSecretToken
      * @param string $agreementGrantToken
      */
-    public function __construct ($appSecretToken = 'demo', $agreementGrantToken = 'demo')
+    public function __construct($appSecretToken = 'demo', $agreementGrantToken = 'demo')
     {
         $this->client = Client::getInstance($appSecretToken, $agreementGrantToken);
     }
@@ -98,11 +99,10 @@ class Reviso
      */
     public static function getRedirectUrl($appPublicToken = 'demo', $locale = 'en-GB', $redirectUrl = '')
     {
-        return 'https://app.reviso.com/api1/requestaccess.aspx?appId=' . $appPublicToken .'&locale=' . $locale . '&redirectUrl=' . $redirectUrl;
+        return 'https://app.reviso.com/api1/requestaccess.aspx?appId=' . $appPublicToken . '&locale=' . $locale . '&redirectUrl=' . $redirectUrl;
     }
 
     /**
-     * @param UriInterface $uri
      * @return bool
      */
     public static function parseTokenFromUrl(UriInterface $uri)
@@ -122,7 +122,7 @@ class Reviso
      * @return Endpoint
      * @throws Exceptions\ErrorResponseException
      */
-    public function __get ($name)
+    public function __get($name)
     {
         $name = self::snakeString($name);
         $endpoints = $this->getEndpoints();
@@ -137,12 +137,15 @@ class Reviso
     /**
      * Convert a value to studly caps case.
      *
-     * @param  string  $value
+     * @param string $value
      * @return string
      */
     public static function studlyString($value)
     {
-        $value = ucwords(str_replace(['-', '_'], ' ', $value));
+        $value = ucwords(str_replace([
+            '-',
+            '_'
+        ], ' ', $value));
 
         return str_replace(' ', '', $value);
     }
@@ -150,16 +153,16 @@ class Reviso
     /**
      * Convert a string to snake case.
      *
-     * @param  string  $value
-     * @param  string  $delimiter
+     * @param string $value
+     * @param string $delimiter
      * @return string
      */
     public static function snakeString($value, $delimiter = '-')
     {
-        if (! ctype_lower($value)) {
+        if (!ctype_lower($value)) {
             $value = preg_replace('/\s+/u', '', ucwords($value));
 
-            $value = strtolower(preg_replace('/(.)(?=[A-Z])/u', '$1'.$delimiter, $value));
+            $value = strtolower(preg_replace('/(.)(?=[A-Z])/u', '$1' . $delimiter, $value));
         }
 
         return $value;
@@ -192,16 +195,16 @@ class Reviso
      * @param null $demo
      * @return bool
      */
-    public function isDemo ($demo = null)
+    public function isDemo($demo = null)
     {
-        return $this->client->isDemo($demo);
+        return $this->client->isDemo();
     }
 
     /**
      * @return \stdClass
      * @throws Exceptions\ErrorResponseException
      */
-    public function getInfo ()
+    public function getInfo()
     {
         if (!$this->info) {
             $this->info = $this->client->get('/');
@@ -214,7 +217,7 @@ class Reviso
      * @return string
      * @throws Exceptions\ErrorResponseException
      */
-    public function getVersion ()
+    public function getVersion()
     {
         return $this->getInfo()->version;
     }
@@ -240,6 +243,7 @@ class Reviso
     {
         return $this->client->get(new Uri($this->getInfo()->resources));
     }
+
     /**
      * @return array
      * @throws Exceptions\ErrorResponseException

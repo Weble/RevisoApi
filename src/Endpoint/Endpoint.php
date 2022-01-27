@@ -48,8 +48,6 @@ class Endpoint
 
     /**
      * Endpoint constructor.
-     * @param Client $client
-     * @param UriInterface $uri
      */
     public function __construct (Client $client, UriInterface $uri)
     {
@@ -60,7 +58,6 @@ class Endpoint
     }
 
     /**
-     * @return Collection
      * @throws ErrorResponseException
      */
     public function get (): Collection
@@ -72,8 +69,6 @@ class Endpoint
     }
 
     /**
-     * @param string $filterName
-     * @param string $operator
      * @param $value
      * @return $this
      */
@@ -103,23 +98,21 @@ class Endpoint
     {
         if (is_object($item)) {
             $data = $this->fetchFromRoute(new Uri($item->self));
-            return new Model($data, $this->getResourceKey());
+            return new Model($this->getResourceKey(), $data);
         }
 
         $params = $this->getRouteParameters($this->getFindRoute());
         $key = $params->first();
 
         $data = $this->fetchFromRoute($this->getFindRoute(), [$key => $item]);
-        return new Model($data, $this->getResourceKey());
+        return new Model($this->getResourceKey(), $data);
     }
 
     /**
-     * @param UriInterface $uri
      * @param array $parameters
-     * @return \stdClass|string
      * @throws ErrorResponseException
      */
-    public function fetchFromRoute(UriInterface $uri, $parameters = [])
+    public function fetchFromRoute(UriInterface $uri, $parameters = []): \stdClass|string
     {
         $params = $this->getRouteParameters($uri);
 
@@ -234,10 +227,9 @@ class Endpoint
 
     /**
      * @param string $type
-     * @return \stdClass|string
      * @throws ErrorResponseException
      */
-    public function getSchema ($type = 'post')
+    public function getSchema ($type = 'post'): \stdClass|string
     {
         $type = $type == 'post' ? 'post' : 'put';
 
@@ -263,10 +255,9 @@ class Endpoint
     }
 
     /**
-     * @return \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
      * @throws ErrorResponseException
      */
-    public function getRouteList ()
+    public function getRouteList (): \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
     {
         return collect($this->getInfo()->routes)->map(function($route) {
             $route->path = $this->cleanRouteParameters(new Uri($route->path));
@@ -284,11 +275,7 @@ class Endpoint
         return $allRoutes;
     }
 
-    /**
-     * @param UriInterface $route
-     * @return \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
-     */
-    public function getRouteParameters (UriInterface $route)
+    public function getRouteParameters (UriInterface $route): \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
     {
         $route = $this->cleanRouteParameters($route);
         $matches = [];
@@ -297,7 +284,7 @@ class Endpoint
 
         $parameters = [];
         foreach ($matches as $placeholder) {
-            if ($placeholder && count($placeholder) > 1) {
+            if ($placeholder && (is_countable($placeholder) ? count($placeholder) : 0) > 1) {
                 $parameters[] = $placeholder[1];
             }
         }
@@ -306,7 +293,6 @@ class Endpoint
     }
 
     /**
-     * @param UriInterface $route
      * @return UriInterface
      */
     protected function cleanRouteParameters (UriInterface $route)
@@ -318,7 +304,7 @@ class Endpoint
         preg_match_all($regex, $path, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $placeholder) {
-            if ($placeholder && count($placeholder) > 1) {
+            if ($placeholder && (is_countable($placeholder) ? count($placeholder) : 0) > 1) {
                 $parts = explode(":", $placeholder[1]);
                 $param = array_shift($parts);
                 $path = str_ireplace($placeholder[1], $param, $path);

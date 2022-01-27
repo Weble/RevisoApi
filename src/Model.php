@@ -4,7 +4,7 @@ namespace Webleit\RevisoApi;
 
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
-use Tightenco\Collect\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Arrayable;
 use Webleit\RevisoApi\Endpoint\ListEndpoint;
 
 /**
@@ -33,7 +33,7 @@ class Model implements \JsonSerializable, Arrayable
      * @param $data
      * @param $keyName
      */
-    public function __construct($data = null, $keyName)
+    public function __construct($keyName, $data = null)
     {
         $this->data = $data;
         $this->keyName = $keyName;
@@ -97,7 +97,7 @@ class Model implements \JsonSerializable, Arrayable
      */
     public function toArray()
     {
-        return json_decode(json_encode($this->getData()), true);
+        return json_decode(json_encode($this->getData(), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -105,7 +105,7 @@ class Model implements \JsonSerializable, Arrayable
      */
     public function toJson()
     {
-        return json_encode($this->toArray());
+        return json_encode($this->toArray(), JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -129,12 +129,11 @@ class Model implements \JsonSerializable, Arrayable
 
     /**
      * Get the id of the object
-     * @return bool|string
      */
-    public function getId()
+    public function getId(): bool|string
     {
         $key = $this->getKeyName();
-        return $this->$key ? $this->$key : false;
+        return $this->$key ?: false;
     }
 
     /**
@@ -149,7 +148,7 @@ class Model implements \JsonSerializable, Arrayable
 
         $data = $this->client->put($this->getUrl(), (array)$this->data);
 
-        $updated = new Model($data, $this->getKeyName());
+        $updated = new Model($this->getKeyName(), $data);
         $this->data = $updated->getData();
 
         unset($updated);
@@ -158,10 +157,9 @@ class Model implements \JsonSerializable, Arrayable
     }
 
     /**
-     * @return \stdClass|string
      * @throws Exceptions\ErrorResponseException
      */
-    public function delete()
+    public function delete(): \stdClass|string
     {
         return $this->client->delete($this->getUrl());
     }

@@ -16,7 +16,6 @@ class EmptyModel extends Model
 
     /**
      * EmptyModel constructor.
-     * @param UriInterface $uri
      * @param $keyName
      */
     public function __construct (UriInterface $uri, $keyName)
@@ -65,6 +64,6 @@ class EmptyModel extends Model
 
         $data = $this->client->post($this->getUrl(), $this->data->toArray());
 
-        return new Model($data, $this->getKeyName());
+        return new Model($this->getKeyName(), $data);
     }
 }

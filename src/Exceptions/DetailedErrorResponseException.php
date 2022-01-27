@@ -26,7 +26,7 @@ class DetailedErrorResponseException extends ErrorResponseException
 
         $message = sprintf(
             "Error Code: %s. Message: %s. Hint: %s. Details: %s",
-            $error->errorCode, $error->message,  $error->developerHint, json_encode($details)
+            $error->errorCode, $error->message,  $error->developerHint, json_encode($details, JSON_THROW_ON_ERROR)
         );
 
         if ($error->errors) {
@@ -38,7 +38,7 @@ class DetailedErrorResponseException extends ErrorResponseException
 
                 $message .= " " . sprintf(
                         "Error Code: %s. Message: %s. Hint: %s. Details: %s",
-                        $e->errorCode, $e->message, $error->message, json_encode($details)
+                        $e->errorCode, $e->message, $error->message, json_encode($details, JSON_THROW_ON_ERROR)
                     );
             }
         }
