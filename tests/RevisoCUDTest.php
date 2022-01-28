@@ -2,20 +2,16 @@
 
 namespace Webleit\ZohoBooksApi\Test;
 
-use GuzzleHttp\Psr7\Uri;
+use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use PHPUnit\Framework\TestCase;
-use Webleit\RevisoApi\ListEndpoint;
-use Webleit\RevisoApi\Model;
-use Webleit\RevisoApi\Endpoint;
-use Webleit\RevisoApi\Reviso;
+use Weble\RevisoApi\Model;
+use Weble\RevisoApi\Reviso;
 
-/**
- * Class ClassNameGeneratorTest
- * @package Webleit\ZohoBooksApi\Test
- */
 class RevisoCUDTest extends TestCase
 {
-    public static $reviso;
+    use ArraySubsetAsserts;
+
+    public static ?Reviso $reviso = null;
 
     public static function setUpBeforeClass(): void
     {
@@ -27,7 +23,7 @@ class RevisoCUDTest extends TestCase
         $auth = json_decode(file_get_contents($authFile));
 
         self::$reviso = new Reviso(
-            isset($auth->AppSecretToken) ? $auth->AppSecretToken : 'demo' ,
+            isset($auth->AppSecretToken) ? $auth->AppSecretToken : 'demo',
             isset($auth->AgreementGrantToken) ? $auth->AgreementGrantToken : 'demo'
         );
     }
@@ -36,7 +32,7 @@ class RevisoCUDTest extends TestCase
      * @test
      * @dataProvider customerDataProvider
      */
-    public function can_create_customer ($data)
+    public function can_create_customer($data)
     {
         $item = $this->createCustomer($data);
 
@@ -47,7 +43,7 @@ class RevisoCUDTest extends TestCase
     /**
      * @param $data
      * @return Model
-     * @throws \Webleit\RevisoApi\Exceptions\ErrorResponseException
+     * @throws \Weble\RevisoApi\Exceptions\ErrorResponseException
      */
     protected function createCustomer($data)
     {
@@ -58,9 +54,9 @@ class RevisoCUDTest extends TestCase
 
     /**
      * @return array
-     * @throws \Webleit\RevisoApi\Exceptions\ErrorResponseException
+     * @throws \Weble\RevisoApi\Exceptions\ErrorResponseException
      */
-    public function customerDataProvider ()
+    public function customerDataProvider()
     {
         self::setUpBeforeClass();
 
@@ -68,23 +64,24 @@ class RevisoCUDTest extends TestCase
         $vatZone = self::$reviso->vatZones->get()->first()->vatZoneNumber;
         $paymentTerms = self::$reviso->paymentTerms->get()->first()->paymentTermsNumber;
 
-        $data = [[
+        $data = [
             [
-                'currency' => 'EUR',
-                'customerGroup' => [
-                    'customerGroupNumber' => $customerGroup
-                ],
-                'vatZone' => [
-                    'vatZoneNumber' => $vatZone
-                ],
-                'name' => 'Test1',
-                'paymentTerms' => [
-                    'paymentTermsNumber' => $paymentTerms
-                ],
-                'address' => 'Test 1',
-                'city' => 'test',
-                'country' => 'IT',
-            ]
+                [
+                    'currency'      => 'EUR',
+                    'customerGroup' => [
+                        'customerGroupNumber' => $customerGroup
+                    ],
+                    'vatZone'       => [
+                        'vatZoneNumber' => $vatZone
+                    ],
+                    'name'          => 'Test1',
+                    'paymentTerms'  => [
+                        'paymentTermsNumber' => $paymentTerms
+                    ],
+                    'address'       => 'Test 1',
+                    'city'          => 'test',
+                    'country'       => 'IT',
+                ]
             ]
         ];
 
@@ -94,7 +91,7 @@ class RevisoCUDTest extends TestCase
     /**
      * @test
      */
-    public function can_update_customer ()
+    public function can_update_customer()
     {
         /** @var Model $customer */
         $customer = self::$reviso->customers->get()->getData()->last();
@@ -113,7 +110,7 @@ class RevisoCUDTest extends TestCase
      * @test
      * @dataProvider customerDataProvider
      */
-    public function can_delete_customer ($data)
+    public function can_delete_customer($data)
     {
         /** @var Model $customer */
         $customer = $this->createCustomer($data);

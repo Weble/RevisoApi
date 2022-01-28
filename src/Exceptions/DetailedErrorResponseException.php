@@ -1,28 +1,16 @@
 <?php
 
-namespace Webleit\RevisoApi\Exceptions;
-
-use Throwable;
+namespace Weble\RevisoApi\Exceptions;
 
 class DetailedErrorResponseException extends ErrorResponseException
 {
-    /**
-     * @var
-     */
-    protected $error;
+    protected object $error;
 
-    /**
-     * DetailedErrorResponseException constructor.
-     * @param $error
-     */
-    public function __construct ($error)
+    public function __construct (object $error)
     {
         $this->error = $error;
 
-        $details = null;
-        if (isset($error->details)) {
-            $details = $error->details;
-        }
+        $details = $error->details ?? null;
 
         $message = sprintf(
             "Error Code: %s. Message: %s. Hint: %s. Details: %s",
@@ -46,10 +34,7 @@ class DetailedErrorResponseException extends ErrorResponseException
         parent::__construct($message);
     }
 
-    /**
-     * @return mixed
-     */
-    public function getError ()
+    public function getError (): object
     {
         return $this->error;
     }

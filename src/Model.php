@@ -1,166 +1,106 @@
 <?php
 
-namespace Webleit\RevisoApi;
+namespace Weble\RevisoApi;
 
 use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\UriInterface;
 use Illuminate\Contracts\Support\Arrayable;
-use Webleit\RevisoApi\Endpoint\ListEndpoint;
+use Weble\RevisoApi\Endpoint\ListEndpoint;
 
-/**
- * Class Model
- * @package Webleit\RevisoApi
- */
 class Model implements \JsonSerializable, Arrayable
 {
-    /**
-     * @var object
-     */
-    protected $data;
+    public const SELF = 'self';
+    protected \Illuminate\Support\Collection $data;
+    protected string $keyName;
+    protected Client $client;
 
-    /**
-     * @var string
-     */
-    protected $keyName;
-
-    /**
-     * @var Client
-     */
-    protected $client;
-
-    /**
-     * Model constructor.
-     * @param $data
-     * @param $keyName
-     */
-    public function __construct($keyName, $data = null)
+    public function __construct(Client $client, string $keyName, ?object $data = null)
     {
-        $this->data = $data;
+        $this->data = new \Illuminate\Support\Collection($data ?? []);
         $this->keyName = $keyName;
 
-        $this->client = Client::getInstance();
+        $this->client = $client;
     }
 
-    /**
-     * @return UriInterface
-     */
-    public function getUrl()
+    public function getUrl(): UriInterface
     {
-        return new Uri($this->data->self);
+        return Client::createUri($this->getData()->get(static::SELF, ''));
     }
 
-    /**
-     * @return string
-     */
-    public function getKeyName()
+    public function getKeyName(): string
     {
         return $this->keyName;
     }
 
-    /**
-     * @param $name
-     * @return ListEndpoint
-     */
     public function __get($name)
     {
-        if (!isset($this->data->$name)) {
-            return;
+        if (!$this->getData()->has($name)) {
+            return null;
         }
 
         // Is url => let's fetch that resource
-        if (Client::isRevisoApiUrl($this->data->$name) && $name != 'self') {
-            return new ListEndpoint(Client::getInstance(), new Uri($this->data->$name), $this->getKeyName());
+        if (Client::isRevisoApiUrl($this->getData()->get($name)) && $name != static::SELF) {
+            return new ListEndpoint($this->client, Client::createUri($this->data->$name), $this->getKeyName());
         }
 
         return $this->data->$name;
     }
 
-    /**
-     * @param $name
-     * @param $value
-     */
     public function __set($name, $value)
     {
-        $this->data->$name = $value;
+        $this->data->put($name, $value);
     }
 
-    /**
-     * @return object
-     */
-    public function getData()
+    public function getData(): \Illuminate\Support\Collection
     {
         return $this->data;
     }
 
-    /**
-     * @return array
-     */
-    public function toArray()
+    public function toArray(): array
     {
-        return json_decode(json_encode($this->getData(), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+        return $this->getData()->toArray();
     }
 
-    /**
-     * @return string
-     */
-    public function toJson()
+    public function toJson(int $options = 0): string
     {
-        return json_encode($this->toArray(), JSON_THROW_ON_ERROR);
+        return $this->getData()->toJson($options);
     }
 
-    /**
-     * Convert the object into something JSON serializable.
-     *
-     * @return array
-     */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
 
-    /**
-     * is a new object?
-     * @return bool
-     */
-    public function isNew()
+    public function isNew(): bool
     {
         return !$this->getId();
     }
 
-    /**
-     * Get the id of the object
-     */
-    public function getId(): bool|string
+    public function getId(): int|string|null
     {
         $key = $this->getKeyName();
         return $this->$key ?: false;
     }
 
-    /**
-     * @param array $data
-     * @return Model
-     */
-    public function save($data = [])
+    public function save(array $data = []): Model
     {
         foreach ($data as $key => $value) {
             $this->data->$key = $value;
         }
 
         $data = $this->client->put($this->getUrl(), (array)$this->data);
-
-        $updated = new Model($this->getKeyName(), $data);
-        $this->data = $updated->getData();
-
-        unset($updated);
+        $this->data = (new Model($this->client, $this->getKeyName(), $data))->getData();
 
         return $this;
     }
 
     /**
      * @throws Exceptions\ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function delete(): \stdClass|string
+    public function delete(): void
     {
-        return $this->client->delete($this->getUrl());
+        $this->client->delete($this->getUrl());
     }
 }
