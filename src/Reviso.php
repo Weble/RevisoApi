@@ -98,7 +98,7 @@ class Reviso
         $name = Utils::snakeString($name);
         $endpoints = $this->getEndpoints();
 
-        if (!isset($endpoints[$name])) {
+        if (! isset($endpoints[$name])) {
             return $this->$name;
         }
 
@@ -112,7 +112,7 @@ class Reviso
     {
         $endpoints = $this->getEndpoints();
 
-        if (!isset($endpoints[$name])) {
+        if (! isset($endpoints[$name])) {
             throw new EndpointNotFoundException($name, $endpoints);
         }
 

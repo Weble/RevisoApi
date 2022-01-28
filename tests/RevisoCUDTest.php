@@ -28,7 +28,7 @@ class RevisoCUDTest extends TestCase
     private static function checkAuthFile(): string
     {
         $authFile = __DIR__ . '/config.json';
-        if (!file_exists($authFile)) {
+        if (! file_exists($authFile)) {
             self::markTestSkipped("No Auth File in {$authFile}, skipping adavanced tests");
         }
 
@@ -58,6 +58,7 @@ class RevisoCUDTest extends TestCase
     {
         /** @var Endpoint $resource */
         $resource = self::$reviso->customers;
+
         return $resource->create($data);
     }
 
@@ -76,22 +77,22 @@ class RevisoCUDTest extends TestCase
         $data = [
             [
                 [
-                    'currency'      => 'EUR',
+                    'currency' => 'EUR',
                     'customerGroup' => [
-                        'customerGroupNumber' => $customerGroup
+                        'customerGroupNumber' => $customerGroup,
                     ],
-                    'vatZone'       => [
-                        'vatZoneNumber' => $vatZone
+                    'vatZone' => [
+                        'vatZoneNumber' => $vatZone,
                     ],
-                    'name'          => 'Test1',
-                    'paymentTerms'  => [
-                        'paymentTermsNumber' => $paymentTerms
+                    'name' => 'Test1',
+                    'paymentTerms' => [
+                        'paymentTermsNumber' => $paymentTerms,
                     ],
-                    'address'       => 'Test 1',
-                    'city'          => 'test',
-                    'country'       => 'IT',
-                ]
-            ]
+                    'address' => 'Test 1',
+                    'city' => 'test',
+                    'country' => 'IT',
+                ],
+            ],
         ];
 
         return $data;
@@ -108,7 +109,7 @@ class RevisoCUDTest extends TestCase
         $customer = self::$reviso->customers->get()->getData()->last();
 
         $data = [
-            'name' => $customer->name . '-123'
+            'name' => $customer->name . '-123',
         ];
 
         /** @var Endpoint $resource */

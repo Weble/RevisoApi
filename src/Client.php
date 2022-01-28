@@ -66,7 +66,7 @@ class Client
         }
 
         $url = static::createUri($url);
-        $restUri =  static::createUri(static::ENDPOINT);
+        $restUri = static::createUri(static::ENDPOINT);
 
         return $url->getHost() === $restUri->getHost();
     }
@@ -86,7 +86,6 @@ class Client
 
         return $uri;
     }
-
 
     /**
      * @throws ClientExceptionInterface
@@ -159,7 +158,6 @@ class Client
         throw new ErrorResponseException($response->getReasonPhrase(), $response->getStatusCode());
     }
 
-
     /**
      * @throws DetailedErrorResponseException
      * @throws ErrorResponseException
@@ -174,7 +172,7 @@ class Client
 
         // All ok, probably not json, like PDF?
         if ($response->getStatusCode() < 200 || $response->getStatusCode() > 299) {
-            if (!$resultJson) {
+            if (! $resultJson) {
                 throw new ErrorResponseException('Internal API error: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase());
             }
 
@@ -187,7 +185,7 @@ class Client
             }
         }
 
-        if (!$resultJson) {
+        if (! $resultJson) {
             // All ok, probably not json, like PDF?
             if ($response->getStatusCode() >= 200 && $response->getStatusCode() <= 299) {
                 return (string)$response->getBody();
@@ -223,22 +221,23 @@ class Client
     public static function appendParameters(UriInterface $uri, array $params): UriInterface
     {
         parse_str($uri->getQuery(), $query);
+
         return $uri->withQuery(http_build_query($query + $params));
     }
 
     protected static function appendDemoParameter(UriInterface $uri): UriInterface
     {
         return static::appendParameters($uri, [
-            'demo' => 'true'
+            'demo' => 'true',
         ]);
     }
 
     protected function addHeadersToRequest(RequestInterface $request, $headers): RequestInterface
     {
         $headers = $headers + [
-                'X-AppSecretToken'      => $this->appSecretToken,
+                'X-AppSecretToken' => $this->appSecretToken,
                 'X-AgreementGrantToken' => $this->agreementGrantToken,
-                'Content-Type'          => 'application/json'
+                'Content-Type' => 'application/json',
             ];
 
         foreach ($headers as $header => $value) {

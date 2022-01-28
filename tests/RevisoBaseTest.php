@@ -33,7 +33,7 @@ class RevisoBaseTest extends TestCase
             'gettingStarted',
             'resources',
             'version',
-            'serverTime'
+            'serverTime',
         ];
 
         foreach ($expectedData as $key) {
@@ -190,7 +190,6 @@ class RevisoBaseTest extends TestCase
         $list = $resources->get();
 
         $this->assertGreaterThan(0, $list->count());
-
     }
 
     public static function tearDownAfterClass(): void

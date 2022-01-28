@@ -2,10 +2,9 @@
 
 namespace Weble\RevisoApi;
 
-use GuzzleHttp\Psr7\Uri;
+use Illuminate\Contracts\Support\Arrayable;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\UriInterface;
-use Illuminate\Contracts\Support\Arrayable;
 use Weble\RevisoApi\Endpoint\ListEndpoint;
 
 class Model implements \JsonSerializable, Arrayable
@@ -35,7 +34,7 @@ class Model implements \JsonSerializable, Arrayable
 
     public function __get($name)
     {
-        if (!$this->getData()->has($name)) {
+        if (! $this->getData()->has($name)) {
             return null;
         }
 
@@ -74,12 +73,13 @@ class Model implements \JsonSerializable, Arrayable
 
     public function isNew(): bool
     {
-        return !$this->getId();
+        return ! $this->getId();
     }
 
     public function getId(): int|string|null
     {
         $key = $this->getKeyName();
+
         return $this->$key ?: false;
     }
 

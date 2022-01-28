@@ -18,6 +18,7 @@ class ProjectEndpoint extends Endpoint
         $routes = (new Collection($this->getInfo()->routes))
             ->map(function ($route) {
                 $route->path = $this->cleanRouteParameters(Client::createUri($route->path));
+
                 return $route;
             });
 

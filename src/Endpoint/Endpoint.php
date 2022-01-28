@@ -46,6 +46,7 @@ class Endpoint
     public function where(string $filterName, string $operator, $value): static
     {
         $this->listEndpoint->where($filterName, $operator, $value);
+
         return $this;
     }
 
@@ -66,6 +67,7 @@ class Endpoint
     {
         if (is_object($item)) {
             $data = $this->fetchFromRoute(new Uri($item->self));
+
             return new Model($this->client, $this->getResourceKey(), $data);
         }
 
@@ -73,6 +75,7 @@ class Endpoint
         $key = $params->first();
 
         $data = $this->fetchFromRoute($this->getFindRoute(), [$key => $item]);
+
         return new Model($this->client, $this->getResourceKey(), $data);
     }
 
@@ -104,12 +107,14 @@ class Endpoint
     public function perPage(int $number): static
     {
         $this->perPage = $number;
+
         return $this;
     }
 
     public function page(int $number): static
     {
         $this->page = $number;
+
         return $this;
     }
 
@@ -215,6 +220,7 @@ class Endpoint
         return (new \Illuminate\Support\Collection($this->getInfo()->routes ?? new stdClass()))
             ->map(function (object $route) {
                 $route->path = $this->cleanRouteParameters(Client::createUri($route->path ?? ''));
+
                 return $route;
             });
     }

@@ -35,7 +35,7 @@ class ListEndpoint
     {
         $uri = Client::appendParameters($this->uri, [
             static::PARAM_PAGE_SKIP => $this->page,
-            static::PARAM_PAGE_SIZE => $this->perPage
+            static::PARAM_PAGE_SIZE => $this->perPage,
         ]);
 
         $filtersQuery = $this->buildFilters();
@@ -51,9 +51,9 @@ class ListEndpoint
     public function where(string $filterName, string $operator, mixed $value): static
     {
         $this->filters[] = [
-            'name'     => $filterName,
+            'name' => $filterName,
             'operator' => $operator,
-            'value'    => $value
+            'value' => $value,
         ];
 
         return $this;
@@ -62,12 +62,14 @@ class ListEndpoint
     public function perPage(int $number): static
     {
         $this->perPage = $number;
+
         return $this;
     }
 
     public function page(int $number): static
     {
         $this->page = $number;
+
         return $this;
     }
 
@@ -78,21 +80,21 @@ class ListEndpoint
 
     protected function buildFilters(): ?string
     {
-        if (!count($this->filters)) {
+        if (! count($this->filters)) {
             return null;
         }
 
         $operatorsMap = [
-            "="     => '$eq',
-            "!="    => '$ne',
-            ">"     => '$gt',
-            ">="    => '$gte',
-            "<"     => '$lt',
-            "<="    => '$lte',
-            "like"  => '$like',
-            "&&"    => '$and',
-            "||"    => '$or',
-            "in"    => '$in',
+            "=" => '$eq',
+            "!=" => '$ne',
+            ">" => '$gt',
+            ">=" => '$gte',
+            "<" => '$lt',
+            "<=" => '$lte',
+            "like" => '$like',
+            "&&" => '$and',
+            "||" => '$or',
+            "in" => '$in',
             "notIn" => '$nin',
         ];
 

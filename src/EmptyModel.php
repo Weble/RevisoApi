@@ -26,7 +26,7 @@ class EmptyModel extends Model
         return true;
     }
 
-    public function getId():int|string|null
+    public function getId(): int|string|null
     {
         return null;
     }

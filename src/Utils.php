@@ -8,7 +8,7 @@ class Utils
     {
         $value = ucwords(str_replace([
             '-',
-            '_'
+            '_',
         ], ' ', $value));
 
         return str_replace(' ', '', $value);
@@ -16,7 +16,7 @@ class Utils
 
     public static function snakeString(string $value, string $delimiter = '-'): string
     {
-        if (!ctype_lower($value)) {
+        if (! ctype_lower($value)) {
             $value = preg_replace('/\s+/u', '', ucwords($value));
 
             $value = strtolower(preg_replace('/(.)(?=[A-Z])/u', '$1' . $delimiter, $value));

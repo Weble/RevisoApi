@@ -2,6 +2,6 @@
 
 namespace Weble\RevisoApi\Exceptions;
 
-class ErrorResponseException extends \Exception {
-
+class ErrorResponseException extends \Exception
+{
 }
