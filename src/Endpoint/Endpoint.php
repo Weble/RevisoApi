@@ -1,57 +1,30 @@
 <?php
 
-namespace Webleit\RevisoApi\Endpoint;
+namespace Weble\RevisoApi\Endpoint;
 
-use Webleit\RevisoApi\Client;
-use Webleit\RevisoApi\Collection;
-use Webleit\RevisoApi\EmptyModel;
-use Webleit\RevisoApi\Exceptions\ErrorResponseException;
 use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\UriInterface;
-use Webleit\RevisoApi\Model;
+use stdClass;
+use Weble\RevisoApi\Client;
+use Weble\RevisoApi\Collection;
+use Weble\RevisoApi\EmptyModel;
+use Weble\RevisoApi\Exceptions\ErrorResponseException;
+use Weble\RevisoApi\Model;
 
-/**
- * Class Reviso
- * @package Webleit\RevisoApi
- */
 class Endpoint
 {
-    /**
-     * @var Client
-     */
-    protected $client;
+    public const TYPE_POST = 'post';
+    public const TYPE_PUT = 'put';
 
-    /**
-     * @var UriInterface
-     */
-    protected $uri;
+    protected Client $client;
+    protected UriInterface $uri;
+    protected ?object $info = null;
+    protected int $perPage = 20;
+    protected int $page = 0;
+    protected ListEndpoint $listEndpoint;
 
-    /**
-     * @var \stdClass
-     */
-    protected $info;
-
-
-    /**
-     * @var int
-     */
-    protected $perPage = 20;
-
-    /**
-     * @var int
-     */
-    protected $page = 0;
-    /**
-     * @var ListEndpoint
-     */
-    protected $listEndpoint;
-
-    /**
-     * Endpoint constructor.
-     * @param Client $client
-     * @param UriInterface $uri
-     */
-    public function __construct (Client $client, UriInterface $uri)
+    public function __construct(Client $client, UriInterface $uri)
     {
         $this->client = $client;
         $this->uri = $uri;
@@ -60,10 +33,9 @@ class Endpoint
     }
 
     /**
-     * @return Collection
      * @throws ErrorResponseException
      */
-    public function get (): Collection
+    public function get(): Collection
     {
         return $this->listEndpoint
             ->perPage($this->perPage)
@@ -71,55 +43,47 @@ class Endpoint
             ->get();
     }
 
-    /**
-     * @param string $filterName
-     * @param string $operator
-     * @param $value
-     * @return $this
-     */
-    public function where(string $filterName, string $operator, $value): self
+    public function where(string $filterName, string $operator, $value): static
     {
         $this->listEndpoint->where($filterName, $operator, $value);
+
         return $this;
     }
 
     /**
-     * @param array $data
-     * @return Model
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function create($data = [])
+    public function create(array $data = []): Model
     {
-        $newItem = new EmptyModel($this->getCreateRoute(), $this->getResourceKey());
-        return $newItem->save($data);
+        return (new EmptyModel($this->client, $this->getCreateRoute(), $this->getResourceKey()))
+            ->save($data);
     }
 
     /**
-     * @param $item
-     * @return Model
      * @throws ErrorResponseException
      */
-    public function find ($item)
+    public function find(object|string $item): Model
     {
         if (is_object($item)) {
             $data = $this->fetchFromRoute(new Uri($item->self));
-            return new Model($data, $this->getResourceKey());
+
+            return new Model($this->client, $this->getResourceKey(), $data);
         }
 
         $params = $this->getRouteParameters($this->getFindRoute());
         $key = $params->first();
 
         $data = $this->fetchFromRoute($this->getFindRoute(), [$key => $item]);
-        return new Model($data, $this->getResourceKey());
+
+        return new Model($this->client, $this->getResourceKey(), $data);
     }
 
     /**
-     * @param UriInterface $uri
-     * @param array $parameters
-     * @return \stdClass|string
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function fetchFromRoute(UriInterface $uri, $parameters = [])
+    public function fetchFromRoute(UriInterface $uri, array $parameters = []): \stdClass|string
     {
         $params = $this->getRouteParameters($uri);
 
@@ -140,122 +104,107 @@ class Endpoint
         return $this->client->get($uri, $queryParams);
     }
 
-    /**
-     * @param $number
-     * @return $this
-     */
-    public function perPage ($number)
+    public function perPage(int $number): static
     {
         $this->perPage = $number;
+
         return $this;
     }
 
-    /**
-     * @param $number
-     * @return $this
-     */
-    public function page ($number)
+    public function page(int $number): static
     {
         $this->page = $number;
+
         return $this;
     }
 
     /**
-     * @return Uri
      * @throws ErrorResponseException
      */
-    public function getListRoute ()
+    public function getListRoute(): UriInterface
     {
-        return new Uri($this->getRouteList()->first()->path);
+        return Client::createUri($this->getRouteList()->first()?->path ?? '');
     }
 
     /**
-     * @return UriInterface
      * @throws ErrorResponseException
      */
-    public function getFindRoute ()
+    public function getFindRoute(): UriInterface
     {
-        return new Uri($this->getRouteList()->get(1)->path);
+        return Client::createUri($this->getRouteList()->get(1)?->path ?? '');
     }
 
     /**
-     * @return UriInterface
      * @throws ErrorResponseException
      */
-    public function getCreateRoute ()
+    public function getCreateRoute(): UriInterface
     {
-        return new Uri($this->getRouteList()->where('method', 'POST')->first()->path);
+        return Client::createUri($this->getRouteList()->where('method', 'POST')->first()?->path ?? '');
     }
 
     /**
-     * @return UriInterface
      * @throws ErrorResponseException
      */
-    public function getDeleteRoute ()
+    public function getDeleteRoute(): UriInterface
     {
-        return new Uri($this->getRouteList()->where('method', 'DELETE')->first()->path);
+        return Client::createUri($this->getRouteList()->where('method', 'DELETE')->first()?->path ?? '');
     }
 
     /**
-     * @return mixed
      * @throws ErrorResponseException
      */
-    public function getResourceKey()
+    public function getResourceKey(): string|int|null
     {
-        return $this->getRouteParameters($this->getFindRoute())->first();
+        return $this->getRouteParameters($this->getFindRoute())->first() ?? null;
     }
 
     /**
-     * @return string
      * @throws ErrorResponseException
      */
-    public function getName ()
+    public function getName(): string
     {
-        return $this->getInfo()->name;
+        return $this->getInfo()->name ?? '';
     }
 
     /**
-     * @return object
      * @throws ErrorResponseException
      */
-    public function getPostSchema ()
+    public function getPostSchema(): object
     {
         return $this->getSchema('post');
     }
 
     /**
-     * @return object
      * @throws ErrorResponseException
      */
-    public function getPutSchema ()
+    public function getPutSchema(): object
     {
         return $this->getSchema('put');
     }
 
     /**
-     * @param string $type
-     * @return \stdClass|string
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getSchema ($type = 'post')
+    public function getSchema(string $type = self::TYPE_POST): object
     {
-        $type = $type == 'post' ? 'post' : 'put';
+        $type = $type === self::TYPE_POST ? self::TYPE_POST : self::TYPE_PUT;
 
         $route = $this->getListRoute();
         $path = $route->getPath() . '/schema/' . $type;
 
         $route = $route->withPath($path);
 
-        return  $this->client->get($route);
+        return $this->client->get($route);
     }
 
     /**
-     * @return \stdClass
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getInfo ()
+    public function getInfo(): object
     {
-        if (!$this->info) {
+        if ($this->info === null) {
             $this->info = $this->client->get($this->uri);
         }
 
@@ -263,32 +212,29 @@ class Endpoint
     }
 
     /**
-     * @return \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getRouteList ()
+    public function getRouteList(): \Illuminate\Support\Collection
     {
-        return collect($this->getInfo()->routes)->map(function($route) {
-            $route->path = $this->cleanRouteParameters(new Uri($route->path));
-            return $route;
-        });
+        return (new \Illuminate\Support\Collection($this->getInfo()->routes ?? new stdClass()))
+            ->map(function (object $route) {
+                $route->path = $this->cleanRouteParameters(Client::createUri($route->path ?? ''));
+
+                return $route;
+            });
     }
 
     /**
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getRoutes ()
+    public function getRoutes(): \Illuminate\Support\Collection
     {
-        $allRoutes = $this->getRouteList();
-
-        return $allRoutes;
+        return $this->getRouteList();
     }
 
-    /**
-     * @param UriInterface $route
-     * @return \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
-     */
-    public function getRouteParameters (UriInterface $route)
+    public function getRouteParameters(UriInterface $route): \Illuminate\Support\Collection
     {
         $route = $this->cleanRouteParameters($route);
         $matches = [];
@@ -297,19 +243,15 @@ class Endpoint
 
         $parameters = [];
         foreach ($matches as $placeholder) {
-            if ($placeholder && count($placeholder) > 1) {
+            if ($placeholder && (is_countable($placeholder) ? count($placeholder) : 0) > 1) {
                 $parameters[] = $placeholder[1];
             }
         }
 
-        return collect($parameters);
+        return new \Illuminate\Support\Collection($parameters);
     }
 
-    /**
-     * @param UriInterface $route
-     * @return UriInterface
-     */
-    protected function cleanRouteParameters (UriInterface $route)
+    protected function cleanRouteParameters(UriInterface $route): UriInterface
     {
         $path = urldecode($route->getPath());
 
@@ -318,7 +260,7 @@ class Endpoint
         preg_match_all($regex, $path, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $placeholder) {
-            if ($placeholder && count($placeholder) > 1) {
+            if ($placeholder && (is_countable($placeholder) ? count($placeholder) : 0) > 1) {
                 $parts = explode(":", $placeholder[1]);
                 $param = array_shift($parts);
                 $path = str_ireplace($placeholder[1], $param, $path);

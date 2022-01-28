@@ -1,70 +1,46 @@
 <?php
-namespace Webleit\RevisoApi;
-use GuzzleHttp\Psr7\Uri;
+
+namespace Weble\RevisoApi;
+
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\UriInterface;
 
-/**
- * Class Model
- * @package Webleit\RevisoApi
- */
 class EmptyModel extends Model
 {
-    /**
-     * @var UriInterface
-     */
-    protected $uri;
+    protected UriInterface $uri;
 
-    /**
-     * EmptyModel constructor.
-     * @param UriInterface $uri
-     * @param $keyName
-     */
-    public function __construct (UriInterface $uri, $keyName)
+    public function __construct(Client $client, UriInterface $uri, string $keyName)
     {
+        parent::__construct($client, $keyName);
+
         $this->uri = $uri;
-        $this->keyName = $keyName;
-        $this->data = collect();
-        $this->client = Client::getInstance();
     }
 
-    /**
-     * @return UriInterface
-     */
-    public function getUrl()
+    public function getUrl(): UriInterface
     {
         return $this->uri;
     }
 
-
-    /**
-     * is a new object?
-     * @return bool
-     */
-    public function isNew()
+    public function isNew(): bool
     {
         return true;
     }
 
-    /**
-     * Get the id of the object
-     * @return null
-     */
-    public function getId()
+    public function getId(): int|string|null
     {
         return null;
     }
 
     /**
-     * @param array $data
-     * @return Model
      * @throws Exceptions\ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function save($data = [])
+    public function save(array $data = []): Model
     {
         $this->data = $this->data->merge($data);
 
         $data = $this->client->post($this->getUrl(), $this->data->toArray());
 
-        return new Model($data, $this->getKeyName());
+        return new Model($this->client, $this->getKeyName(), $data);
     }
 }

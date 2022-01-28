@@ -1,7 +1,7 @@
 <?php
 
-namespace Webleit\RevisoApi\Exceptions;
+namespace Weble\RevisoApi\Exceptions;
 
-class ErrorResponseException extends \Exception {
-
+class ErrorResponseException extends \Exception
+{
 }

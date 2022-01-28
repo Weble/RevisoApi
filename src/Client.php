@@ -1,243 +1,178 @@
 <?php
 
-namespace Webleit\RevisoApi;
+namespace Weble\RevisoApi;
 
-use GuzzleHttp\Psr7\Uri;
-use GuzzleHttp\RequestOptions;
+use Http\Client\HttpClient;
+use Http\Discovery\HttpClientDiscovery;
+use Http\Discovery\Psr17FactoryDiscovery;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface;
-use Webleit\RevisoApi\Exceptions\DetailedErrorResponseException;
-use Webleit\RevisoApi\Exceptions\ErrorResponseException;
-use Webleit\RevisoApi\Exceptions\GenericErrorResponseException;
+use RectorPrefix20220126\Symfony\Contracts\HttpClient\HttpClientInterface;
+use Weble\RevisoApi\Exceptions\DetailedErrorResponseException;
+use Weble\RevisoApi\Exceptions\ErrorResponseException;
+use Weble\RevisoApi\Exceptions\GenericErrorResponseException;
 
-/**
- * Class Client
- * @see https://github.com/opsway/zohobooks-api
- * @package Webleit\ZohoBooksApi
- */
 class Client
 {
-    /**
-     *
-     */
-    const ENDPOINT = 'https://rest.reviso.com/';
+    public const ENDPOINT = 'https://rest.reviso.com/';
+    public const DEMO_TOKEN = 'demo';
 
-    /**
-     * @var \GuzzleHttp\Client
-     */
-    protected $httpClient;
+    protected HttpClient $httpClient;
+    protected string $appSecretToken;
+    protected string $agreementGrantToken;
 
-    /**
-     * @var string
-     */
-    protected $appSecretToken;
+    protected static UriFactoryInterface $uriFactory;
+    protected static RequestFactoryInterface $requestFactory;
+    protected static StreamFactoryInterface $bodyFactory;
 
-    /**
-     * @var string
-     */
-    protected $agreementGrantToken;
-
-    /**
-     * @var bool
-     */
-    protected $demo = false;
-
-    /**
-     * @var Client
-     */
-    protected static $instance;
-
-    /**
-     * Client constructor.
-     * @param string $appSecretToken
-     * @param string $agreementGrantToken
-     */
-    protected function __construct ($appSecretToken = 'demo', $agreementGrantToken = 'demo')
+    public function __construct(string $appSecretToken = 'demo', string $agreementGrantToken = 'demo', ?HttpClientInterface $httpClient = null)
     {
         $this->appSecretToken = $appSecretToken;
         $this->agreementGrantToken = $agreementGrantToken;
 
-        $this->createClient();
+        $this->httpClient = $httpClient ?? HttpClientDiscovery::find();
+        static::$uriFactory = Psr17FactoryDiscovery::findUriFactory();
+        static::$requestFactory = Psr17FactoryDiscovery::findRequestFactory();
+        static::$bodyFactory = Psr17FactoryDiscovery::findStreamFactory();
     }
 
-    /**
-     * @param Client $client
-     * @return Client
-     */
-    public static function setInstance(Client $client)
+    public static function createUri(string $uri = ''): UriInterface
     {
-        self::$instance = $client;
-        return self::$instance;
+        return static::$uriFactory->createUri($uri);
     }
 
-    /**
-     * @param string $appSecretToken
-     * @param string $agreementGrantToken
-     * @return Client
-     */
-    public static function getInstance ($appSecretToken = 'demo', $agreementGrantToken = 'demo')
+    public static function createRequest(string $method, UriInterface $uri): RequestInterface
     {
-        if (!self::$instance) {
-            self::$instance = new Client($appSecretToken, $agreementGrantToken);
-            if ($appSecretToken == 'demo') {
-                self::$instance->isDemo(true);
-            }
-        }
-
-        return self::$instance;
+        return static::$requestFactory
+            ->createRequest($method, $uri);
     }
 
-    /**
-     * @param $url
-     * @return bool
-     */
-    public static function isRevisoApiUrl ($url)
+    public static function createBody(string $content = ''): StreamInterface
+    {
+        return static::$bodyFactory
+            ->createStream($content);
+    }
+
+    public static function isRevisoApiUrl(string $url): bool
     {
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {
             return false;
         }
 
-        $url = new Uri($url);
-        $restUri = new Uri(self::ENDPOINT);
+        $url = static::createUri($url);
+        $restUri = static::createUri(static::ENDPOINT);
 
-        if ($url->getHost() == $restUri->getHost()) {
-            return true;
-        }
-
-        return false;
+        return $url->getHost() === $restUri->getHost();
     }
 
-    /**
-     * @return bool
-     */
-    public function isDemo ()
+    public function isDemo(): bool
     {
-        return $this->appSecretToken == 'demo' ? true : false;
+        return $this->appSecretToken === static::DEMO_TOKEN;
     }
 
-    /**
-     * @return \GuzzleHttp\Client
-     */
-    protected function createClient ()
+    public function getEndPoint(): UriInterface
     {
-        $this->httpClient = new \GuzzleHttp\Client([
-            'base_uri' => $this->getEndPoint(),
-            'http_errors' => false,
-            'headers' => [
-                'X-AppSecretToken' => $this->appSecretToken,
-                'X-AgreementGrantToken' => $this->agreementGrantToken,
-                'Content-Type' => 'application/json'
-            ]
-        ]);
-        return $this->httpClient;
-    }
-
-    /**
-     * @return UriInterface
-     */
-    public function getEndPoint ()
-    {
-        $uri = new Uri(self::ENDPOINT);
+        $uri = static::createUri(static::ENDPOINT);
 
         if ($this->isDemo()) {
-            $uri = Uri::withQueryValue($uri, 'demo', 'true');
+            $uri = static::appendDemoParameter($uri);
         }
 
         return $uri;
     }
 
     /**
- * @param $url
- * @param array $params
- * @return \stdClass|string
- * @throws ErrorResponseException
- */
-    public function get ($url, array $params = [])
+     * @throws ClientExceptionInterface
+     */
+    public function call(string $method, UriInterface $uri, array $data = [], array $headers = []): ResponseInterface
+    {
+        $request = $this->addHeadersToRequest(
+            static::createRequest($method, $uri),
+            $headers
+        )->withBody(
+            static::createBody(json_encode($data))
+        );
+
+        return $this->httpClient->sendRequest($request);
+    }
+
+    /**
+     * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
+     */
+    public function get(string|UriInterface $url, array $params = []): object|bool|array|string
     {
         $url = $this->getRequestUrl($url);
-
-        foreach ($params as $key => $value) {
-            $url = Uri::withQueryValue($url, $key, $value);
-        }
-
-        if ($this->isDemo()) {
-            $url = Uri::withQueryValue($url, 'demo', 'true');
-        }
+        $url = static::appendParameters($url, $params);
 
         return $this->processResult(
-            $this->httpClient->get($url)
+            $this->call('GET', $url)
         );
     }
 
     /**
-     * @param $url
-     * @param array $params
-     * @return \stdClass|string
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function post ($url, array $params = [])
+    public function post(string|UriInterface $url, array $data = []): object|bool|array|string
     {
         $url = $this->getRequestUrl($url);
 
         return $this->processResult(
-            $this->httpClient->post($url, [
-                RequestOptions::JSON => $params
-            ])
+            $this->call('POST', $url, $data)
         );
     }
 
     /**
-     * @param $url
-     * @param array $params
-     * @return \stdClass|string
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function put ($url, array $params = [])
+    public function put($url, array $data = []): object|bool|array|string
     {
         $url = $this->getRequestUrl($url);
 
         return $this->processResult(
-            $this->httpClient->put($url, [
-                RequestOptions::JSON => $params
-            ])
+            $this->call('PUT', $url, $data)
         );
     }
 
     /**
-     * @param $url
-     * @return bool
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function delete ($url)
+    public function delete(string|UriInterface $url): void
     {
         $url = $this->getRequestUrl($url);
-        $response =  $this->httpClient->delete($url);
+        $response = $this->call("DELETE", $url);
 
         if ($response->getStatusCode() >= 200 && $response->getStatusCode() <= 299) {
-            return true;
+            return;
         }
 
         throw new ErrorResponseException($response->getReasonPhrase(), $response->getStatusCode());
     }
 
-
     /**
-     * @param ResponseInterface $response
-     * @return bool|mixed|string
      * @throws DetailedErrorResponseException
      * @throws ErrorResponseException
      */
-    protected function processResult (ResponseInterface $response)
+    protected function processResult(ResponseInterface $response): bool|string|array|object
     {
         try {
-            $resultJson = json_decode($response->getBody());
-        } catch (\InvalidArgumentException $e) {
+            $resultJson = json_decode($response->getBody(), null, 512, JSON_THROW_ON_ERROR);
+        } catch (\InvalidArgumentException|\JsonException) {
             $resultJson = false;
         }
 
         // All ok, probably not json, like PDF?
         if ($response->getStatusCode() < 200 || $response->getStatusCode() > 299) {
-            if (!$resultJson) {
+            if (! $resultJson) {
                 throw new ErrorResponseException('Internal API error: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase());
             }
 
@@ -250,25 +185,20 @@ class Client
             }
         }
 
-        if (!$resultJson) {
+        if (! $resultJson) {
             // All ok, probably not json, like PDF?
             if ($response->getStatusCode() >= 200 && $response->getStatusCode() <= 299) {
-                return (string) $response->getBody();
+                return (string)$response->getBody();
             }
 
-           throw new ErrorResponseException('Internal API error: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase());
+            throw new ErrorResponseException('Internal API error: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase());
         }
-
 
 
         return $resultJson;
     }
 
-    /**
-     * @param $url
-     * @return UriInterface|static
-     */
-    public function getRequestUrl ($url)
+    public function getRequestUrl(string|UriInterface $url): UriInterface
     {
         if ($url instanceof UriInterface) {
             $baseUri = $url;
@@ -282,8 +212,38 @@ class Client
         $url = $baseUri->withPath($path);
 
         if ($this->isDemo()) {
-            $url = Uri::withQueryValue($url, 'demo', 'true');
+            $url = static::appendDemoParameter($url);
         }
+
         return $url;
+    }
+
+    public static function appendParameters(UriInterface $uri, array $params): UriInterface
+    {
+        parse_str($uri->getQuery(), $query);
+
+        return $uri->withQuery(http_build_query($query + $params));
+    }
+
+    protected static function appendDemoParameter(UriInterface $uri): UriInterface
+    {
+        return static::appendParameters($uri, [
+            'demo' => 'true',
+        ]);
+    }
+
+    protected function addHeadersToRequest(RequestInterface $request, $headers): RequestInterface
+    {
+        $headers = $headers + [
+                'X-AppSecretToken' => $this->appSecretToken,
+                'X-AgreementGrantToken' => $this->agreementGrantToken,
+                'Content-Type' => 'application/json',
+            ];
+
+        foreach ($headers as $header => $value) {
+            $request = $request->withHeader($header, $value);
+        }
+
+        return $request;
     }
 }

@@ -1,61 +1,26 @@
 <?php
 
-namespace Webleit\RevisoApi\Endpoint;
+namespace Weble\RevisoApi\Endpoint;
 
-use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\UriInterface;
-use Webleit\RevisoApi\Client;
-use Webleit\RevisoApi\Collection;
-use Webleit\RevisoApi\Exceptions\ErrorResponseException;
+use Weble\RevisoApi\Client;
+use Weble\RevisoApi\Collection;
+use Weble\RevisoApi\Exceptions\ErrorResponseException;
 
-/**
- * Class Reviso
- * @package Webleit\RevisoApi
- */
 class ListEndpoint
 {
-    /**
-     * @var Client
-     */
-    protected $client;
+    public const PARAM_PAGE_SKIP = 'skippages';
+    public const PARAM_PAGE_SIZE = 'pagesize';
+    protected Client $client;
+    protected UriInterface $uri;
+    protected object $info;
+    protected int $perPage = 20;
+    protected int $page = 0;
+    protected string $resourceKey;
+    protected array $filters = [];
 
-    /**
-     * @var UriInterface
-     */
-    protected $uri;
-
-    /**
-     * @var \stdClass
-     */
-    protected $info;
-
-    /**
-     * @var int
-     */
-    protected $perPage = 20;
-
-    /**
-     * @var int
-     */
-    protected $page = 0;
-
-    /**
-     * @var string
-     */
-    protected $resourceKey;
-
-    /**
-     * @var array
-     */
-    protected $filters = [];
-
-    /**
-     * ListEndpoint constructor.
-     * @param Client $client
-     * @param UriInterface $uri
-     * @param $resourceKey
-     */
-    public function __construct(Client $client, UriInterface $uri, $resourceKey)
+    public function __construct(Client $client, UriInterface $uri, string $resourceKey)
     {
         $this->client = $client;
         $this->uri = $uri;
@@ -63,90 +28,73 @@ class ListEndpoint
     }
 
     /**
-     * @param array $filters
-     * @return Collection
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
     public function get(): Collection
     {
-        $uri = Uri::withQueryValue($this->uri, 'skippages', $this->page);
-        $uri = Uri::withQueryValue($uri, 'pagesize', $this->perPage);
+        $uri = Client::appendParameters($this->uri, [
+            static::PARAM_PAGE_SKIP => $this->page,
+            static::PARAM_PAGE_SIZE => $this->perPage,
+        ]);
 
         $filtersQuery = $this->buildFilters();
         if ($filtersQuery) {
-            $uri = Uri::withQueryValue($uri, 'filter', $this->buildFilters());
+            $uri = Client::appendParameters($uri, ['filter' => $this->buildFilters()]);
         }
 
         $list = $this->client->get($uri);
 
-        return new Collection($list, $this->getResourceKey());
+        return Collection::create($this->client, $list, $this->getResourceKey());
     }
 
-    /**
-     * @param string $filterName
-     * @param string $operator
-     * @param $value
-     * @return $this
-     */
-    public function where(string $filterName, string $operator, $value): self
+    public function where(string $filterName, string $operator, mixed $value): static
     {
         $this->filters[] = [
-            'name'     => $filterName,
+            'name' => $filterName,
             'operator' => $operator,
-            'value'    => $value
+            'value' => $value,
         ];
 
         return $this;
     }
 
-    /**
-     * @param $number
-     * @return $this
-     */
-    public function perPage($number)
+    public function perPage(int $number): static
     {
         $this->perPage = $number;
+
         return $this;
     }
 
-    /**
-     * @param $number
-     * @return $this
-     */
-    public function page($number)
+    public function page(int $number): static
     {
         $this->page = $number;
+
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getResourceKey()
+    public function getResourceKey(): string
     {
         return $this->resourceKey;
     }
 
-    /**
-     * @return string|null
-     */
     protected function buildFilters(): ?string
     {
-        if (!count($this->filters)) {
+        if (! count($this->filters)) {
             return null;
         }
 
         $operatorsMap = [
-            "="     => '$eq',
-            "!="    => '$ne',
-            ">"     => '$gt',
-            ">="    => '$gte',
-            "<"     => '$lt',
-            "<="    => '$lte',
-            "like"  => '$like',
-            "&&"    => '$and',
-            "||"    => '$or',
-            "in"    => '$in',
+            "=" => '$eq',
+            "!=" => '$ne',
+            ">" => '$gt',
+            ">=" => '$gte',
+            "<" => '$lt',
+            "<=" => '$lte',
+            "like" => '$like',
+            "&&" => '$and',
+            "||" => '$or',
+            "in" => '$in',
             "notIn" => '$nin',
         ];
 

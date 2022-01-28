@@ -1,90 +1,41 @@
 <?php
 
-namespace Webleit\RevisoApi;
+namespace Weble\RevisoApi;
 
-use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
 
-/**
- * Class Reviso
- * @package Webleit\RevisoApi
- * @mixin \Tightenco\Collect\Support\Collection
- */
-class Collection
+class Collection extends \Illuminate\Support\Collection
 {
-    /**
-     * @var Collection
-     */
-    protected $data;
+    protected string $keyName;
+    protected object $info;
 
-    /**
-     * @var string
-     */
-    protected $keyName;
-
-    /**
-     * @var \stdClass
-     */
-    protected $info;
-
-    /**
-     * Resource constructor.
-     * @param object $list
-     * @param string $keyName
-     */
-    public function __construct ($list, $keyName)
+    public static function create(Client $client, object $info, string $keyName): static
     {
-        $this->info = $list;
-        $this->keyName = $keyName;
+        return (new static((array) ($info->collection ?? [])))
+            ->withInfo($info)
+            ->map(fn ($item) => new Model($client, $keyName, $item))
+            ->keyBy(fn (Model $item) => $item->getData()->get($keyName));
     }
 
-    /**
-     * @return \Tightenco\Collect\Support\Collection
-     */
-    public function getData()
-    {
-        if (!$this->data) {
-            $this->data = collect($this->info->collection)->map(function($item) {
-                return new Model($item, $this->keyName);
-            })->keyBy(function(Model $item) {
-                return $item->{$this->keyName};
-            });
-        }
-
-        return $this->data;
-    }
-
-    /**
-     * @param $name
-     * @param $arguments
-     * @return mixed
-     */
-    public function __call ($name, $arguments)
-    {
-        return call_user_func_array([$this->getData(), $name], $arguments);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getMetadata()
+    public function getMetadata(): ?object
     {
         return $this->info->metadata;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getPagination()
+    public function getPagination(): ?object
     {
         return $this->info->pagination;
     }
 
-    /**
-     * @return UriInterface
-     */
-    public function getUrl()
+    public function getUrl(): UriInterface
     {
-        return new Uri($this->info->self);
+        return Client::createUri($this->info->self);
+    }
+
+    protected function withInfo(object $info): static
+    {
+        $this->info = $info;
+
+        return $this;
     }
 }

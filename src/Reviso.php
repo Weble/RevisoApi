@@ -1,14 +1,17 @@
 <?php
 
-namespace Webleit\RevisoApi;
-use function GuzzleHttp\Psr7\parse_query;
+namespace Weble\RevisoApi;
+
 use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\UriInterface;
-use Webleit\RevisoApi\Endpoint\Endpoint;
+use RectorPrefix20220126\Symfony\Contracts\HttpClient\HttpClientInterface;
+use Weble\RevisoApi\Endpoint\Endpoint;
+use Weble\RevisoApi\Exceptions\EndpointNotFoundException;
 
 /**
  * Class Reviso
- * @package Webleit\RevisoApi
+ * @package Weble\RevisoApi
  * @property-read Endpoint $accountingYears
  * @property-read Endpoint $accounts
  * @property-read Endpoint $aliasLayers
@@ -61,73 +64,41 @@ use Webleit\RevisoApi\Endpoint\Endpoint;
  * @property-read Endpoint $studio
  * @property-read Endpoint $tenderContracts
  * @property-read Endpoint $vatStatements
- * @property-read Endpoin $voucherTemplates
+ * @property-read Endpoint $voucherTemplates
  */
 class Reviso
 {
-    /**
-     * @var Client
-     */
-    protected $client;
+    public const REDIRECT_URL = 'https://app.reviso.com/api1/requestaccess.aspx';
+    protected Client $client;
+    protected array $endpoints = [];
+    protected ?object $info = null;
 
-    /**
-     * @var array
-     */
-    protected $endpoints;
-
-    /**
-     * @var \stdClass
-     */
-    protected $info;
-
-    /**
-     * Reviso constructor.
-     * @param string $appSecretToken
-     * @param string $agreementGrantToken
-     */
-    public function __construct ($appSecretToken = 'demo', $agreementGrantToken = 'demo')
+    public function __construct(string $appSecretToken = 'demo', string $agreementGrantToken = 'demo', ?HttpClientInterface $httpClient = null)
     {
-        $this->client = Client::getInstance($appSecretToken, $agreementGrantToken);
+        $this->client = new Client($appSecretToken, $agreementGrantToken, $httpClient);
+    }
+
+    public static function getRedirectUrl(string $appPublicToken = 'demo', string $locale = 'en-GB', string $redirectUrl = ''): string
+    {
+        return static::REDIRECT_URL . '?appId=' . $appPublicToken . '&locale=' . $locale . '&redirectUrl=' . $redirectUrl;
+    }
+
+    public static function parseTokenFromUrl(UriInterface $uri): ?string
+    {
+        parse_str($uri->getQuery(), $query);
+
+        return $query['token'] ?? null;
     }
 
     /**
-     * @param string $appPublicToken
-     * @param string $locale
-     * @param string $redirectUrl
-     * @return string
-     */
-    public static function getRedirectUrl($appPublicToken = 'demo', $locale = 'en-GB', $redirectUrl = '')
-    {
-        return 'https://app.reviso.com/api1/requestaccess.aspx?appId=' . $appPublicToken .'&locale=' . $locale . '&redirectUrl=' . $redirectUrl;
-    }
-
-    /**
-     * @param UriInterface $uri
-     * @return bool
-     */
-    public static function parseTokenFromUrl(UriInterface $uri)
-    {
-        $query = $uri->getQuery();
-        $query = parse_query($query);
-
-        if (isset($query['token'])) {
-            return $query['token'];
-        }
-
-        return false;
-    }
-
-    /**
-     * @param $name
-     * @return Endpoint
      * @throws Exceptions\ErrorResponseException
      */
-    public function __get ($name)
+    public function __get($name)
     {
-        $name = self::snakeString($name);
+        $name = Utils::snakeString($name);
         $endpoints = $this->getEndpoints();
 
-        if (!isset($endpoints[$name])) {
+        if (! isset($endpoints[$name])) {
             return $this->$name;
         }
 
@@ -135,47 +106,14 @@ class Reviso
     }
 
     /**
-     * Convert a value to studly caps case.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    public static function studlyString($value)
-    {
-        $value = ucwords(str_replace(['-', '_'], ' ', $value));
-
-        return str_replace(' ', '', $value);
-    }
-
-    /**
-     * Convert a string to snake case.
-     *
-     * @param  string  $value
-     * @param  string  $delimiter
-     * @return string
-     */
-    public static function snakeString($value, $delimiter = '-')
-    {
-        if (! ctype_lower($value)) {
-            $value = preg_replace('/\s+/u', '', ucwords($value));
-
-            $value = strtolower(preg_replace('/(.)(?=[A-Z])/u', '$1'.$delimiter, $value));
-        }
-
-        return $value;
-    }
-
-    /**
-     * @param $name
-     * @return Endpoint
      * @throws Exceptions\ErrorResponseException
      */
-    public function getEndpoint($name)
+    public function getEndpoint(string $name): Endpoint
     {
         $endpoints = $this->getEndpoints();
 
-        if (!isset($endpoints[$name])) {
-            return $this->$name;
+        if (! isset($endpoints[$name])) {
+            throw new EndpointNotFoundException($name, $endpoints);
         }
 
         // Dedicated class?
@@ -184,26 +122,22 @@ class Reviso
             return new $class($this->client, new Uri($endpoints[$name]));
         }
 
-
+        // Generic Endpoint
         return new Endpoint($this->client, new Uri($endpoints[$name]));
     }
 
-    /**
-     * @param null $demo
-     * @return bool
-     */
-    public function isDemo ($demo = null)
+    public function isDemo(): bool
     {
-        return $this->client->isDemo($demo);
+        return $this->client->isDemo();
     }
 
     /**
-     * @return \stdClass
      * @throws Exceptions\ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getInfo ()
+    public function getInfo(): \stdClass
     {
-        if (!$this->info) {
+        if ($this->info === null) {
             $this->info = $this->client->get('/');
         }
 
@@ -211,50 +145,50 @@ class Reviso
     }
 
     /**
-     * @return string
      * @throws Exceptions\ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getVersion ()
+    public function getVersion(): string
     {
-        return $this->getInfo()->version;
+        return $this->getInfo()->version ?? '';
     }
 
     /**
-     * @return array
      * @throws Exceptions\ErrorResponseException
      */
-    public function getEndpoints()
+    public function getEndpoints(): array
     {
-        if (!$this->endpoints) {
-            $this->endpoints = array_merge((array)$this->getProductionEndpoints(), (array)$this->getExperimentalEndpoints());
+        if (empty($this->endpoints)) {
+            $this->endpoints = array_merge($this->getProductionEndpoints(), $this->getExperimentalEndpoints());
         }
 
         return $this->endpoints;
     }
 
     /**
-     * @return \stdClass
      * @throws Exceptions\ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    protected function getEndpointList()
+    protected function getEndpointList(): \stdClass
     {
         return $this->client->get(new Uri($this->getInfo()->resources));
     }
+
     /**
-     * @return array
      * @throws Exceptions\ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getProductionEndpoints()
+    public function getProductionEndpoints(): array
     {
-        return $this->getEndpointList()->production;
+        return (array)($this->getEndpointList()->production ?? []);
     }
 
     /**
-     * @return array
      * @throws Exceptions\ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getExperimentalEndpoints()
+    public function getExperimentalEndpoints(): array
     {
-        return $this->getEndpointList()->experimental;
+        return (array)($this->getEndpointList()->experimental ?? []);
     }
 }

@@ -1,20 +1,19 @@
 <?php
 
-namespace Webleit\ZohoBooksApi\Test;
+namespace Weble\RevisoApi\Tests;
 
+use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
-use Webleit\RevisoApi\Model;
-use Webleit\RevisoApi\Endpoint;
-use Webleit\RevisoApi\Reviso;
+use Weble\RevisoApi\Endpoint\ListEndpoint;
+use Weble\RevisoApi\Model;
+use Weble\RevisoApi\Reviso;
 
-/**
- * Class ClassNameGeneratorTest
- * @package Webleit\ZohoBooksApi\Test
- */
 class RevisoBaseTest extends TestCase
 {
-    protected static $reviso;
+    use ArraySubsetAsserts;
+
+    protected static ?Reviso $reviso = null;
 
     public static function setUpBeforeClass(): void
     {
@@ -26,8 +25,6 @@ class RevisoBaseTest extends TestCase
      */
     public function can_get_info()
     {
-
-
         $info = self::$reviso->getInfo();
 
         $expectedData = [
@@ -36,7 +33,7 @@ class RevisoBaseTest extends TestCase
             'gettingStarted',
             'resources',
             'version',
-            'serverTime'
+            'serverTime',
         ];
 
         foreach ($expectedData as $key) {
@@ -49,8 +46,6 @@ class RevisoBaseTest extends TestCase
      */
     public function can_get_version()
     {
-
-
         $version = self::$reviso->getVersion();
 
         $this->assertGreaterThan(0, strlen($version));
@@ -61,8 +56,6 @@ class RevisoBaseTest extends TestCase
      */
     public function can_get_resources()
     {
-
-
         $resources = self::$reviso->getEndpoints();
 
         $this->assertGreaterThan(0, count($resources));
@@ -73,8 +66,6 @@ class RevisoBaseTest extends TestCase
      */
     public function can_get_resource_key()
     {
-
-
         $key = self::$reviso->accounts->getResourceKey();
 
         $this->assertEquals('accountNumber', $key);
@@ -85,9 +76,6 @@ class RevisoBaseTest extends TestCase
      */
     public function has_account_resource()
     {
-
-
-        /** @var Endpoint $resource */
         $resource = self::$reviso->getEndpoint('accounts');
 
         $this->assertEquals('accounts', $resource->getName());
@@ -99,9 +87,6 @@ class RevisoBaseTest extends TestCase
      */
     public function can_get_account_list()
     {
-
-
-        /** @var Endpoint $resource */
         $resource = self::$reviso->getEndpoint('accounts');
 
         $this->assertGreaterThan(0, $resource->get()->count());
@@ -112,9 +97,6 @@ class RevisoBaseTest extends TestCase
      */
     public function can_get_account()
     {
-
-
-        /** @var Endpoint $resource */
         $resource = self::$reviso->getEndpoint('accounts');
 
         $this->assertGreaterThan(0, $resource->get()->count());
@@ -125,19 +107,12 @@ class RevisoBaseTest extends TestCase
      */
     public function can_parse_route()
     {
-
-
-        /** @var Endpoint $resource */
         $resource = self::$reviso->getEndpoint('accounts');
 
         $route = new Uri('https://rest.reviso.com/accounts/{accountNumber:int}/accounting-years/{accountingYear}');
-        $parameters = $resource->getRouteParameters($route);
+        $parameters = $resource->getRouteParameters($route)->toArray();
 
-        $this->assertArraySubset([
-            'accountNumber',
-            'accountingYear'
-        ], $parameters->toArray());
-
+        $this->assertArraySubset(['accountNumber', 'accountingYear'], $parameters);
     }
 
     /**
@@ -145,13 +120,9 @@ class RevisoBaseTest extends TestCase
      */
     public function can_use_dashed_name_routes()
     {
-
-
-        /** @var Endpoint $resource */
         $resource = self::$reviso->accountingYears;
 
         $this->assertEquals('accounting-years', $resource->getName());
-
     }
 
     /**
@@ -159,15 +130,11 @@ class RevisoBaseTest extends TestCase
      */
     public function can_get_post_schema()
     {
-
-
-        /** @var Endpoint $resource */
         $resource = self::$reviso->accounts;
         $schema = $resource->getPostSchema();
         $properties = $schema->properties;
 
         $this->assertGreaterThan(0, count(get_object_vars($properties)));
-
     }
 
     /**
@@ -175,7 +142,6 @@ class RevisoBaseTest extends TestCase
      */
     public function can_find_account()
     {
-        /** @var Endpoint $resource */
         $resource = self::$reviso->accounts;
         $item = $resource->get()->first();
         $model = $resource->find($item);
@@ -189,11 +155,10 @@ class RevisoBaseTest extends TestCase
      */
     public function can_find_accounting_years_from_account()
     {
-        /** @var Endpoint\Endpoint $resource */
         $resource = self::$reviso->accounts;
         $item = $resource->get()->first();
 
-        $this->assertInstanceOf(Endpoint\ListEndpoint::class, $item->accountingYears);
+        $this->assertInstanceOf(ListEndpoint::class, $item->accountingYears);
         $this->assertGreaterThan(0, $item->accountingYears->get()->count());
     }
 
@@ -202,7 +167,6 @@ class RevisoBaseTest extends TestCase
      */
     public function can_filter_customers()
     {
-        /** @var Endpoint\Endpoint $resource */
         $resources = self::$reviso->customers;
         $list = $resources->get();
         $resource = $list->first();
@@ -222,12 +186,10 @@ class RevisoBaseTest extends TestCase
      */
     public function can_list_customers()
     {
-        /** @var Endpoint\Endpoint $resource */
         $resources = self::$reviso->customers;
         $list = $resources->get();
 
         $this->assertGreaterThan(0, $list->count());
-
     }
 
     public static function tearDownAfterClass(): void

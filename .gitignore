@@ -2,3 +2,7 @@
 vendor
 docs
 tests/config.json
+.phpunit.result.cache
+composer.lock
+build
+.php-cs-fixer.cache

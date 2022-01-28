@@ -1,32 +1,23 @@
 <?php
 
-namespace Webleit\RevisoApi\Exceptions;
-
-use Throwable;
+namespace Weble\RevisoApi\Exceptions;
 
 class DetailedErrorResponseException extends ErrorResponseException
 {
-    /**
-     * @var
-     */
-    protected $error;
+    protected object $error;
 
-    /**
-     * DetailedErrorResponseException constructor.
-     * @param $error
-     */
-    public function __construct ($error)
+    public function __construct(object $error)
     {
         $this->error = $error;
 
-        $details = null;
-        if (isset($error->details)) {
-            $details = $error->details;
-        }
+        $details = $error->details ?? null;
 
         $message = sprintf(
             "Error Code: %s. Message: %s. Hint: %s. Details: %s",
-            $error->errorCode, $error->message,  $error->developerHint, json_encode($details)
+            $error->errorCode,
+            $error->message,
+            $error->developerHint,
+            json_encode($details, JSON_THROW_ON_ERROR)
         );
 
         if ($error->errors) {
@@ -37,19 +28,19 @@ class DetailedErrorResponseException extends ErrorResponseException
                 }
 
                 $message .= " " . sprintf(
-                        "Error Code: %s. Message: %s. Hint: %s. Details: %s",
-                        $e->errorCode, $e->message, $error->message, json_encode($details)
-                    );
+                    "Error Code: %s. Message: %s. Hint: %s. Details: %s",
+                    $e->errorCode,
+                    $e->message,
+                    $error->message,
+                    json_encode($details, JSON_THROW_ON_ERROR)
+                );
             }
         }
 
         parent::__construct($message);
     }
 
-    /**
-     * @return mixed
-     */
-    public function getError ()
+    public function getError(): object
     {
         return $this->error;
     }

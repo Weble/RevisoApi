@@ -1,29 +1,26 @@
 <?php
 
-namespace Webleit\RevisoApi\Endpoint;
+namespace Weble\RevisoApi\Endpoint;
 
-use GuzzleHttp\Psr7\Uri;
-use Psr\Http\Message\UriInterface;
-use Webleit\RevisoApi\Client;
-use Webleit\RevisoApi\Exceptions\ErrorResponseException;
-use Webleit\RevisoApi\Collection;
+use Illuminate\Support\Collection;
+use Psr\Http\Client\ClientExceptionInterface;
+use Weble\RevisoApi\Client;
+use Weble\RevisoApi\Exceptions\ErrorResponseException;
 
-/**
- * Class Reviso
- * @package Webleit\RevisoApi
- */
 class ProjectEndpoint extends Endpoint
 {
     /**
-     * @return \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
      * @throws ErrorResponseException
+     * @throws ClientExceptionInterface
      */
-    public function getRouteList ()
+    public function getRouteList(): Collection
     {
-        $routes = collect($this->getInfo()->routes)->map(function($route) {
-            $route->path = $this->cleanRouteParameters(new Uri($route->path));
-            return $route;
-        });
+        $routes = (new Collection($this->getInfo()->routes))
+            ->map(function ($route) {
+                $route->path = $this->cleanRouteParameters(Client::createUri($route->path));
+
+                return $route;
+            });
 
         // First route on projects is not good
         $routes->shift();
