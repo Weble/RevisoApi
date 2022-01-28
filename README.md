@@ -8,6 +8,7 @@
 ---
 
 This Library is a SDK in PHP that simplifies the usage of the Reviso REST API (http://api-docs.reviso.com)
+
 It provides both an interface to ease the interaction with the APIs without bothering with the actual REST request, while packaging the various responses using very simple Model classes that can be then uses with any other library or framework.
 
 ## Installation 
@@ -16,6 +17,16 @@ It provides both an interface to ease the interaction with the APIs without both
 composer require webleit/revisoapi
 ```
 
+### HTTP Clients
+
+In order to talk to Reviso APIs, you need an HTTP Client library. Since v2 of this package, the HTTP Client is not included, allowing you to choose the one you like the best, and avoiding any potential dependency conflict.
+
+You can use any library to send HTTP messages  that implements [php-http/client-implementation](https://packagist.org/providers/php-http/client-implementation).
+
+Here is a list of all officially supported clients and adapters: <http://docs.php-http.org/en/latest/clients.html>
+
+You can read more on the [HTTPlug docs](http://docs.php-http.org/en/latest/httplug/users.html).
+
 ## Usage
 
 In order to use the library, just require the composer autoload file, and then fire up the library itself.
@@ -23,6 +34,14 @@ In order to use the library, just require the composer autoload file, and then f
 ```php
 require './vendor/autoload.php';
 $reviso = new \Webleit\RevisoApi\Reviso($appSecretToken, $agreementGrantToken);
+```
+
+This way, the library will try to find any HTTP Client implementation that you may already have.
+If you want, you can pass a specific Http Client instance to the library like this:
+
+```php
+require './vendor/autoload.php';
+$reviso = new \Webleit\RevisoApi\Reviso($appSecretToken, $agreementGrantToken, $yourHttpClient);
 ```
 
 If you want to use the demo account, just don't specify the auth parameters, and you'll be able to use any
@@ -86,7 +105,7 @@ $customers = $reviso->customers->page(1)->perPage(100)->get();
 ## Return Types
 
 Any "list" api call returns a Collection object, which contains information on the list itself, allows for further pagination, 
-and stores the list of items in a Laravel-derived Collection package.
+and stores the list of items in a Laravel Collection package (`Illuminate\Support\Collection`).
 You can therefore use the result as Collection, which allows mapping, reducing, serializing, etc
 
 ```php
@@ -113,7 +132,7 @@ $name = $customer->name;
 
 ```
 
-will return a \Webleit\RevisoApi\Model object, which is Arrayable and Jsonable, and that can be therefore used in many ways.
+will return a `\Weble\RevisoApi\Model` object, which is Arrayable and Jsonable, and that can be therefore used in many ways.
 
 ## CRUD
 
@@ -152,12 +171,16 @@ $customer->delete();
 
 ## Test
 This package contains some tests to test the basic functionalities of the package.
-In order to run the tests also on the "CRUD" methods, you need to create a config.json file in the "tests/" directory,
-with the authentication details of an app you want to use as a test base
+In order to run the tests also on the "CRUD" methods, you need to create a `config.json` file in the`"tests/` directory, with the authentication details of an app you want to use as a test base.
+You may copy if from the `config.example.json` in the same directory.
 
-```vendor/bin/phpunit tests``` will run all the tests
-```vendor/bin/phpunit tests/RevisoBaseTest.php``` will run only the GET tests, that runs even in demo mode, without
-authentication details
+```bash
+composer test
+```
+
+## Upgrade from V1 to V2
+
+[See the upgrade docs](UPGRADE.md)
 
 ## Contributing
 
