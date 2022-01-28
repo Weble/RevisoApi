@@ -41,10 +41,10 @@ class Model implements \JsonSerializable, Arrayable
 
         // Is url => let's fetch that resource
         if (Client::isRevisoApiUrl($this->getData()->get($name)) && $name != static::SELF) {
-            return new ListEndpoint($this->client, Client::createUri($this->data->$name), $this->getKeyName());
+            return new ListEndpoint($this->client, Client::createUri($this->getData()->get($name)), $this->getKeyName());
         }
 
-        return $this->data->$name;
+        return $this->getData()->get($name);
     }
 
     public function __set($name, $value)

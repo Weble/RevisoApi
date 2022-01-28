@@ -2,15 +2,17 @@
 
 namespace Weble\RevisoApi\Tests;
 
+use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
-use Weble\RevisoApi\Endpoint\Endpoint;
 use Weble\RevisoApi\Endpoint\ListEndpoint;
 use Weble\RevisoApi\Model;
 use Weble\RevisoApi\Reviso;
 
 class RevisoBaseTest extends TestCase
 {
+    use ArraySubsetAsserts;
+
     protected static ?Reviso $reviso = null;
 
     public static function setUpBeforeClass(): void
@@ -110,8 +112,7 @@ class RevisoBaseTest extends TestCase
         $route = new Uri('https://rest.reviso.com/accounts/{accountNumber:int}/accounting-years/{accountingYear}');
         $parameters = $resource->getRouteParameters($route)->toArray();
 
-        $this->assertArrayHasKey('accountNumber', $parameters);
-        $this->assertArrayHasKey('accountingYear', $parameters);
+        $this->assertArraySubset(['accountNumber', 'accountingYear'], $parameters);
     }
 
     /**

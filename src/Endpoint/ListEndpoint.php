@@ -45,7 +45,7 @@ class ListEndpoint
 
         $list = $this->client->get($uri);
 
-        return new Collection($this->client, $list, $this->getResourceKey());
+        return Collection::create($this->client, $list, $this->getResourceKey());
     }
 
     public function where(string $filterName, string $operator, mixed $value): static

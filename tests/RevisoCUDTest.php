@@ -15,10 +15,7 @@ class RevisoCUDTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        $authFile = __DIR__ . '/config.example.json';
-        if (file_exists(__DIR__ . '/config.json')) {
-            $authFile = __DIR__ . '/config.json';
-        }
+        $authFile = self::checkAuthFile();
 
         $auth = json_decode(file_get_contents($authFile));
 
@@ -28,12 +25,24 @@ class RevisoCUDTest extends TestCase
         );
     }
 
+    private static function checkAuthFile(): string
+    {
+        $authFile = __DIR__ . '/config.json';
+        if (!file_exists($authFile)) {
+            self::markTestSkipped("No Auth File in {$authFile}, skipping adavanced tests");
+        }
+
+        return $authFile;
+    }
+
     /**
      * @test
      * @dataProvider customerDataProvider
      */
     public function can_create_customer($data)
     {
+        self::checkAuthFile();
+
         $item = $this->createCustomer($data);
 
         $this->assertInstanceOf(Model::class, $item);
@@ -93,6 +102,8 @@ class RevisoCUDTest extends TestCase
      */
     public function can_update_customer()
     {
+        self::checkAuthFile();
+
         /** @var Model $customer */
         $customer = self::$reviso->customers->get()->getData()->last();
 
@@ -112,6 +123,8 @@ class RevisoCUDTest extends TestCase
      */
     public function can_delete_customer($data)
     {
+        self::checkAuthFile();
+
         /** @var Model $customer */
         $customer = $this->createCustomer($data);
 

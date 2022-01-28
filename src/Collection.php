@@ -9,15 +9,12 @@ class Collection extends \Illuminate\Support\Collection
     protected string $keyName;
     protected object $info;
 
-    public function __construct(Client $client, object $list, string $keyName)
+    public static function create(Client $client, object $info, string $keyName): static
     {
-        $this->info = $list;
-        $this->keyName = $keyName;
-
-        parent::__construct($this->info->collection ?? []);
-
-        $this->map(fn($item) => new Model($client, $this->keyName, $item))
-            ->keyBy(fn(Model $item) => $item->{$this->keyName});
+        return (new static((array) ($info->collection ?? [])))
+            ->withInfo($info)
+            ->map(fn ($item) => new Model($client, $keyName, $item))
+            ->keyBy(fn (Model $item) => $item->getData()->get($keyName));
     }
 
     public function getMetadata(): ?object
@@ -33,5 +30,12 @@ class Collection extends \Illuminate\Support\Collection
     public function getUrl(): UriInterface
     {
         return Client::createUri($this->info->self);
+    }
+
+    protected function withInfo(object $info): static
+    {
+        $this->info = $info;
+
+        return $this;
     }
 }

@@ -180,7 +180,7 @@ class Reviso
      */
     public function getProductionEndpoints(): array
     {
-        return $this->getEndpointList()->production ?? [];
+        return (array)($this->getEndpointList()->production ?? []);
     }
 
     /**
@@ -189,6 +189,6 @@ class Reviso
      */
     public function getExperimentalEndpoints(): array
     {
-        return $this->getEndpointList()->experimental ?? [];
+        return (array)($this->getEndpointList()->experimental ?? []);
     }
 }
